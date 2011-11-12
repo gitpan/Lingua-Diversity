@@ -1,0 +1,40 @@
+---
+abstract: 'Measuring diversity of text units'
+author:
+  - 'Aris Xanthos <aris.xanthos@unil.ch>'
+build_requires:
+  Test::More: 0
+configure_requires:
+  Module::Build: 0.36
+generated_by: 'Module::Build version 0.3607'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Lingua-Diversity
+provides:
+  Lingua::Diversity:
+    file: lib/Lingua/Diversity.pm
+    version: 0.01
+  Lingua::Diversity::Internals:
+    file: lib/Lingua/Diversity/Internals.pm
+    version: 0.01
+  Lingua::Diversity::MTLD:
+    file: lib/Lingua/Diversity/MTLD.pm
+    version: 0.01
+  Lingua::Diversity::Result:
+    file: lib/Lingua/Diversity/Result.pm
+    version: 0.01
+  Lingua::Diversity::Utils:
+    file: lib/Lingua/Diversity/Utils.pm
+    version: 0.01
+  Lingua::Diversity::X:
+    file: lib/Lingua/Diversity/X.pm
+    version: 0.01
+requires:
+  Exception::Class: 0
+  Moose: 0
+  perl: 5.006
+resources:
+  license: http://dev.perl.org/licenses/
+version: 0.01
