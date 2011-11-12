@@ -3,7 +3,7 @@ package Lingua::Diversity;
 use Moose;
 use Moose::Util::TypeConstraints;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use Lingua::Diversity::Result;
 use Lingua::Diversity::X;
@@ -92,7 +92,7 @@ Lingua::Diversity - Measuring diversity of text units
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity version 0.01.
+This documentation refers to Lingua::Diversity version 0.02.
 
 =head1 SYNOPSIS
 
@@ -117,7 +117,7 @@ This documentation refers to Lingua::Diversity version 0.01.
     print "Lexical diversity:       ", $result->get_diversity(), "\n";
     print "Variance:                ", $result->get_variance(),  "\n";
 
-    # Tag a file using Lingua::TreeTagger...
+    # Tag text using Lingua::TreeTagger...
     use Lingua::TreeTagger;
     my $tagger = Lingua::TreeTagger->new(
         'language' => 'english',
@@ -150,19 +150,18 @@ various measures of diversity to text units. At present, the only implemented
 measure is MTLD (see L<Lingua::Diversity::MTLD>), but there's more to come.
 
 Note that the Lingua::Diversity class is meant to serve as a base class for
-classes such as Lingua::Diversity::Resampling or Lingua::Diversity::MTLD,
-which implement specific diversity measures. Clients should always instantiate
-the specific classes instead of this one (see L<SYNOPSIS>, as well as the
-documentation of L<Lingua::Diversity::MTLD>).
+classes such as L<Lingua::Diversity::MTLD>, which implement specific diversity
+measures. Clients should always instantiate the specific classes instead of
+this one (see L</SYNOPSIS>).
 
 =head1 METHODS
 
 =over 4
 
-=item C<measure()>
+=item measure()
 
 Apply the selected diversity measure and return the result in a new
-Lingua::Diversity::Result object.
+L<Lingua::Diversity::Result> object.
 
 The method requires a reference to a non-empty array of text units (typically
 words) as argument.
@@ -170,12 +169,13 @@ words) as argument.
 Units should be in the text's order, since some measures (e.g. MTLD) take it
 into account. Specific measures may set conditions on the minimal or maximal
 number of units and raise exceptions when these conditions are not met (see
-L<Lingua::Diversity::X>).
+subroutine C<_validate_size()> in
+L<Lingua::Diversity::Internals|Lingua::Diversity::Internals/SUBROUTINES>).
 
 The L<Lingua::Diversity::Utils> module contained within this distribution
 provides tools for helping with the creation of the array of units.
 
-=item C<measure_per_category()>
+=item measure_per_category()
 
 Apply the selected diversity measure per category and return the result in a
 new Lingua::Diversity::Result object. For instance, units might be wordforms
@@ -186,8 +186,9 @@ diversity).
 Units should be in the text's order, since some measures (e.g. MTLD) take it
 into account. Specific measures may set conditions on the minimal or maximal
 number of units and raise exceptions when these conditions are not met (see
-L<Lingua::Diversity::X>). There should be the same number of items in the
-unit and category array.
+subroutine C<_validate_size()> in
+L<Lingua::Diversity::Internals|Lingua::Diversity::Internals/SUBROUTINES>).
+There should be the same number of items in the unit and category array.
 
 The L<Lingua::Diversity::Utils> module contained within this distribution
 provides tools for helping with the creation of the array of units and lemmas.
@@ -200,8 +201,8 @@ provides tools for helping with the creation of the array of units and lemmas.
 
 =item Call to abstract method CLASS::METHOD
 
-This exception is raised when either method L<measure()> or method
-L<measure_per_category()> is called while it is not supported by the selected
+This exception is raised when either method C<measure()> or method
+C<measure_per_category()> is called while it is not supported by the selected
 measure.
 
 =back

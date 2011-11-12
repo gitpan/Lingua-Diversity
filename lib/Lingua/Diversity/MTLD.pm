@@ -3,7 +3,7 @@ package Lingua::Diversity::MTLD;
 use Moose;
 use Moose::Util::TypeConstraints;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 extends 'Lingua::Diversity';
 
@@ -263,7 +263,7 @@ Lingua::Diversity::MTLD - 'MTLD' method for measuring diversity
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity::MTLD version 0.01.
+This documentation refers to Lingua::Diversity::MTLD version 0.02.
 
 =head1 SYNOPSIS
 
@@ -291,13 +291,13 @@ This documentation refers to Lingua::Diversity::MTLD version 0.01.
     print "Lexical diversity:       ", $result->get_diversity(), "\n";
     print "Variance:                ", $result->get_variance(),  "\n";
 
-    # Tag a file using Lingua::TreeTagger...
+    # Tag text using Lingua::TreeTagger...
     use Lingua::TreeTagger;
     my $tagger = Lingua::TreeTagger->new(
         'language' => 'english',
         'options'  => [ qw( -token -lemma -no-unknown ) ],
     );
-    my $tagged_text = $tagger->tag_file( 'path/to/some/file.txt' );
+    my $tagged_text = $tagger->tag_text( \$text );
 
     # Get references to an array of wordforms and an array of lemmas...
     my ( $wordform_array_ref, $lemma_array_ref ) = split_tagged_text(
@@ -324,7 +324,8 @@ of text units. MTLD stands for Measure of Textual Lexical Diversity, which is
 also known as LDAT (Lexical Diversity Assessment Tool), cf. McCarthy, P.M., &
 Jarvis, S. (2010) 'MTLD, vocd-D, and HD-D: A validation study of sophisticated
 approaches to lexical diversity assessment', Behavior Research Methods, 42(2):
-381-392.
+381-392
+(L<read it online|http://www.springerlink.com/content/257587jm46601751/>).
 
 The MTLD method is based on the type-token ratio of a text, i.e. the ratio of
 the number of distinct words--or more generally text units--to the total
@@ -336,11 +337,11 @@ ratio above a specified threshold, which is set to 0.72 by McCarthy and Jarvis
 The present implementation also returns the variance of factor length, as well
 as the number of observations, which in most cases will not be an integer (see
 the notion of 'partial factor' in McCarthy and Jarvis (2010) for a detailed
-explanation of why it is so.
+explanation of why it is so).
 
 This implementation also attempts to generalize the authors' original idea to
 the computation of morphological diversity (see method
-C<measure_per_category()> below.
+C<measure_per_category()> below).
 
 =head1 CREATOR
 
@@ -360,12 +361,13 @@ Default value is 0.72, following McCarthy and Jarvis (2010).
 The computation of MTLD is performed two times, once in left-to-right text
 order and once in right-to-left text order. Each pass yields a weighted
 average (and variance), and the two averages are in turned averaged to get the
-value that is finally reported. This attribute indicates whether the reported
-average should itself be weighted according to the potentially different
-number of observations in the two passes (value 'within_and_between'), or not
-(value 'within_only'). The default value is 'within_only', as in the paper of
-McCarthy and Jarvis, although the author of this implementation finds it more
-consistent to select 'within_and_between'.
+value that is finally reported (the two variances are also averaged). This
+attribute indicates whether the reported average should itself be weighted
+according to the potentially different number of observations in the two
+passes (value 'within_and_between'), or not (value 'within_only'). The default
+value is 'within_only', as in McCarthy and Jarvis (2010), although the
+author of this implementation finds it more consistent to select
+'within_and_between'.
 
 =back
 
@@ -373,11 +375,11 @@ consistent to select 'within_and_between'.
 
 =over 4
 
-=item C<get_threshold()> and C<set_threshold()>
+=item get_threshold() and set_threshold()
 
 Getter and setter for the threshold attribute.
 
-=item C<get_weighting_mode()> and C<set_weighting_mode()>
+=item get_weighting_mode() and set_weighting_mode()
 
 Getter and setter for the weighting_mode attribute.
 
@@ -387,7 +389,7 @@ Getter and setter for the weighting_mode attribute.
 
 =over 4
 
-=item C<measure()>
+=item measure()
 
 Apply the diversity measure and return the result in a new
 Lingua::Diversity::Result object. The result includes the average, variance,
@@ -400,7 +402,7 @@ The L<Lingua::Diversity::Utils> module contained within the
 L<Lingua::Diversity> distribution provides tools for helping with the creation
 of the array of units.
 
-=item C<measure_per_category()>
+=item measure_per_category()
 
 Apply the diversity measure per category and return the result in a
 new Lingua::Diversity::Result object. For instance, units might be wordforms
@@ -430,24 +432,24 @@ categories.
 
 =over 4
 
-=item Method [measure()/measure_per_category()] must be called with a
+=item Method [C<measure()>/C<measure_per_category()>] must be called with a
 reference to an array as 1st argument
 
-This exception is raised when either method L<measure()> or method
-L<measure_per_category()> is called without a reference to an array as a
+This exception is raised when either method C<measure()> or method
+C<measure_per_category()> is called without a reference to an array as a
 first argument.
 
-=item Method measure_per_category() must be called with a reference to an
+=item Method C<measure_per_category()> must be called with a reference to an
 array as 2nd argument
 
-This exception is raised when method L<measure_per_category()> is called
+This exception is raised when method C<measure_per_category()> is called
 without a reference to an array as a second argument.
 
-=item Method [measure()/measure_per_category()] was called with an array
+=item Method [C<measure()>/C<measure_per_category()>] was called with an array
 containing N item(s) while this measure requires at least 1 item(s)
 
-This exception is raised when either method L<measure()> or method
-L<measure_per_category()> is called with an empty array as argument.
+This exception is raised when either method C<measure()> or method
+C<measure_per_category()> is called with an empty array as argument.
 
 =back
 

@@ -14,7 +14,7 @@ our @EXPORT_OK   = qw(
     split_tagged_text
 );
 
-our $VERSION     = 0.01;
+our $VERSION     = 0.02;
 
 use Lingua::Diversity::X;
 
@@ -162,12 +162,12 @@ __END__
 
 =head1 NAME
 
-Lingua::Diversity::Internals - utility subroutines for developers of classes
-derived from Lingua::Diversity
+Lingua::Diversity::Utils - utility subroutines for users of classes
+derived from L<Lingua::Diversity>
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity::Internals version 0.01.
+This documentation refers to Lingua::Diversity::Utils version 0.02.
 
 =head1 SYNOPSIS
 
@@ -213,7 +213,7 @@ use of a class derived from L<Lingua::Diversity>.
 
 =over 4
 
-=item C<split_text()>
+=item split_text()
 
 Split a text into units (typically words), delete empty units, and return a
 reference to the array of units.
@@ -233,13 +233,13 @@ Default is C<qr{\s+}>.
 
 =back
 
-=item C<split_tagged_text()>
+=item split_tagged_text()
 
 Given a L<Lingua::TreeTagger::TaggedText> object, return a reference to the
 array of units (e.g. wordforms). Optionally, return a second reference to the
 array of categories (e.g. lemmas).
 
-The subroutine requires two named parameter and may take up to three of them.
+The subroutine requires two named parameters and may take up to three of them.
 
 =over 4
 
@@ -268,40 +268,40 @@ attribute is available in the L<Lingua::TreeTagger::TaggedText> object!
 
 =over 4
 
-=item Missing parameter 'text' in call to subroutine split_text()
+=item Missing parameter 'text' in call to subroutine C<split_text()>
 
-This exception is raised when subroutine L<split_text()> is called without a
+This exception is raised when subroutine C<split_text()> is called without a
 parameter named 'text' (whose value should be a reference to a string).
 
 =item Missing parameter 'tagged_text' in call to subroutine
-split_tagged_text()
+C<split_tagged_text()>
 
-This exception is raised when subroutine L<split_tagged_text()> is called
+This exception is raised when subroutine C<split_tagged_text()> is called
 without a parameter named 'tagged_text').
 
-=item Parameter 'tagged_text' in call to subroutine split_tagged_text() must
-be a Lingua::TreeTagger::TaggedText object
+=item Parameter 'tagged_text' in call to subroutine C<split_tagged_text()>
+must be a L<Lingua::TreeTagger::TaggedText> object
 
-This exception is raised when subroutine L<split_tagged_text()> is called
+This exception is raised when subroutine C<split_tagged_text()> is called
 with a parameter named 'tagged_text' whose value is not a
-Lingua::TreeTagger::TaggedText object.
+L<Lingua::TreeTagger::TaggedText> object.
 
-=item Missing parameter 'unit' in call to subroutine split_tagged_text()
+=item Missing parameter 'unit' in call to subroutine C<split_tagged_text()>
 
-This exception is raised when subroutine L<split_tagged_text()> is called
+This exception is raised when subroutine C<split_tagged_text()> is called
 without a parameter named 'unit').
 
-=item Parameter 'unit' in call to subroutine split_tagged_text() must be
+=item Parameter 'unit' in call to subroutine C<split_tagged_text()> must be
 either 'original', 'lemma', or 'tag'
 
-This exception is raised when subroutine L<split_tagged_text()> is called
+This exception is raised when subroutine C<split_tagged_text()> is called
 with a parameter named 'unit' whose value is not 'original', 'lemma', or
 'tag'.
 
-=item Parameter 'category' in call to subroutine split_tagged_text() must be
-either 'lemma' or 'tag'
+=item Parameter 'category' in call to subroutine C<split_tagged_text()> must
+be either 'lemma' or 'tag'
 
-This exception is raised when subroutine L<split_tagged_text()> is called
+This exception is raised when subroutine C<split_tagged_text()> is called
 with a parameter named 'category' whose value is not 'lemma' or 'tag'.
 
 =back

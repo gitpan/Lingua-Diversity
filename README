@@ -1,4 +1,4 @@
-Lingua-Diversity
+Lingua-Diversity version 0.02
 
 This distribution provides a simple object-oriented interface for applying
 various measures of diversity to text units. At present, the only implemented

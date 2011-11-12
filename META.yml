@@ -15,19 +15,19 @@ name: Lingua-Diversity
 provides:
   Lingua::Diversity:
     file: lib/Lingua/Diversity.pm
-    version: 0.01
+    version: 0.02
   Lingua::Diversity::Internals:
     file: lib/Lingua/Diversity/Internals.pm
-    version: 0.01
+    version: 0.02
   Lingua::Diversity::MTLD:
     file: lib/Lingua/Diversity/MTLD.pm
-    version: 0.01
+    version: 0.02
   Lingua::Diversity::Result:
     file: lib/Lingua/Diversity/Result.pm
-    version: 0.01
+    version: 0.02
   Lingua::Diversity::Utils:
     file: lib/Lingua/Diversity/Utils.pm
-    version: 0.01
+    version: 0.02
   Lingua::Diversity::X:
     file: lib/Lingua/Diversity/X.pm
     version: 0.01
@@ -37,4 +37,4 @@ requires:
   perl: 5.006
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.01
+version: 0.02

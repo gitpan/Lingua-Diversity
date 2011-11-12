@@ -3,7 +3,7 @@ package Lingua::Diversity::Result;
 use Moose;
 use Moose::Util::TypeConstraints;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 
 #=============================================================================
@@ -65,13 +65,13 @@ Lingua::Diversity::Result - storing the result of a diversity measurement
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity::Result version 0.01.
+This documentation refers to Lingua::Diversity::Result version 0.02.
 
 =head1 SYNOPSIS
 
     use Lingua::Diversity::Result;
 
-    # Given a Lingua::Diversity derived object and data @somme_array...
+    # Given a Lingua::Diversity derived object and an array of data...
     
     # Measure diversity in the data and store the result in a Result object.
     my $result = $diversity->measure( \@data );
@@ -131,31 +131,24 @@ weights, which needs not be an integer.
 
 =over 4
 
-=item C<get_diversity()>
+=item get_diversity()
 
 Getter for the 'diversity' attribute.
 
-=item C<get_variance()> and C<has_variance()>
+=item get_variance() and has_variance()
 
 Getter and predicate for the 'variance' attribute.
 
-=item C<get_count()> and C<has_count()>
+=item get_count() and has_count()
 
 Getter and predicate for the 'count' attribute.
 
 =back
 
-=head1 CONFIGURATION AND ENVIRONMENT
-
-Some subroutines in module Lingua::Diversity::Utils require a working
-version of TreeTagger (available at
-L<http://www.ims.uni-stuttgart.de/projekte/corplex/TreeTagger>).
-
 =head1 DEPENDENCIES
 
-This module is part of the Lingua::Diversity distribution, and extends
+This module is part of the L<Lingua::Diversity> distribution, and extends
 L<Lingua::Diversity>.
-
 
 =head1 BUGS AND LIMITATIONS
 
