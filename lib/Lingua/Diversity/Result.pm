@@ -3,20 +3,7 @@ package Lingua::Diversity::Result;
 use Moose;
 use Moose::Util::TypeConstraints;
 
-our $VERSION = '0.02';
-
-
-#=============================================================================
-# Subtypes definitions.
-#=============================================================================
-
-subtype 'NonNegReal',
-    as 'Num',
-    where { $_ >= 0 };
-
-subtype 'PosReal',
-    as 'Num',
-    where { $_ > 0 };
+our $VERSION = '0.03';
 
 
 
@@ -26,21 +13,21 @@ subtype 'PosReal',
 
 has 'diversity' => (
     is          => 'ro',
-    isa         => 'NonNegReal',
+    isa         => 'Num',
     reader      => 'get_diversity',
     required    => 1,
 );
 
 has 'variance' => (
     is          => 'ro',
-    isa         => 'NonNegReal',
+    isa         => 'Num',
     reader      => 'get_variance',
     predicate   => 'has_variance',
 );
 
 has 'count' => (
     is          => 'ro',
-    isa         => 'PosReal',
+    isa         => 'Num',
     reader      => 'get_count',
     predicate   => 'has_count',
 );
@@ -111,19 +98,19 @@ The constructor takes one required and two optional named parameters:
 
 =item diversity (required)
 
-A non-negative number characterizing the diversity measured in the data.
+A number characterizing the diversity measured in the data.
 
 =item variance
 
 If the value of the 'diversity' attribute is an average, this attribute
-may contain the corresponding variance (a non negative number).
+may contain the corresponding variance.
 
 =item count
 
 If the value of the 'diversity' attribute is an average, this attribute
-may contain the corresponding number of observations (a positive number).
-In the case of a weighted average, the value of this attribute is the sum of
-weights, which needs not be an integer.
+may contain the corresponding number of observations. In the case of a
+weighted average, the value of this attribute is the sum of weights, which
+needs not be an integer.
 
 =back
 

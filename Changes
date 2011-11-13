@@ -6,3 +6,11 @@ Revision history for Lingua-Diversity
 0.02    Sat Nov 12 21:30:00 2011
         Fixed a few typos, errors and glitches in the embedded documentation.
 
+0.03    Sun Nov 13 23:00:00 2011
+        Fixed a few more errors in the embedded documentation.
+        Added the possibility to selectively in-/exclude tokens in subroutine
+        Lingua::Diversity::Utils::split_tagged_text().
+        Relaxed constraints on attributes 'diversity', 'variance', and 'count'
+        of Lingua::Diversity::Result objects; they're just plain Nums now.
+        
+

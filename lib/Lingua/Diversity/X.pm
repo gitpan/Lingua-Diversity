@@ -6,7 +6,7 @@ use strict;
 use warnings;
 use Carp;
 
-our $VERSION = 0.01;
+our $VERSION = 0.02;
 
 
 #=============================================================================
@@ -122,6 +122,16 @@ use Exception::Class (
     },
 
     'Lingua::Diversity::X::Utils::SplitTaggedTextWrongCategoryParam' => {
+        isa         => 'Lingua::Diversity::X::Utils',
+        description => 'Wrong parameter value in call to split_tagged_text',
+    },
+
+    'Lingua::Diversity::X::Utils::SplitTaggedTextWrongModeParam' => {
+        isa         => 'Lingua::Diversity::X::Utils',
+        description => 'Wrong parameter value in call to split_tagged_text',
+    },
+
+    'Lingua::Diversity::X::Utils::SplitTaggedTextWrongLogicalParam' => {
         isa         => 'Lingua::Diversity::X::Utils',
         description => 'Wrong parameter value in call to split_tagged_text',
     },
@@ -262,6 +272,19 @@ sub Lingua::Diversity::X::Utils::SplitTaggedTextWrongCategoryParam::full_message
          . q{must be either 'lemma' or 'tag'};
 }
 
+sub Lingua::Diversity::X::Utils::SplitTaggedTextWrongModeParam::full_message {
+    my ( $self ) = @_;
+    return q{Key 'mode' of hash 'condition' in call to subroutine }
+         . q{split_tagged_text() must have value either 'include' or }
+         . q{'exclude'};
+}
+
+sub Lingua::Diversity::X::Utils::SplitTaggedTextWrongLogicalParam::full_message {
+    my ( $self ) = @_;
+    return q{Key 'logical' of hash 'condition' in call to subroutine }
+         . q{split_tagged_text() must have value either 'and' or 'or'};
+}
+
 
 1;
 
@@ -275,7 +298,7 @@ Lingua::Diversity::X - Exception classes for Lingua::Diversity
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity:X version 0.01.
+This documentation refers to Lingua::Diversity:X version 0.02.
 
 =head1 DESCRIPTION
 

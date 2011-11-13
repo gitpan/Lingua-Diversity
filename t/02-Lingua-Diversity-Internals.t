@@ -170,11 +170,30 @@ my $recoded_array_ref   = _prepend_unit_with_category(
 
 # Subroutine _prepend_unit_with_category() works correctly.
 ok(
-       $recoded_array_ref->[0] eq 'VERBcan'
-    && $recoded_array_ref->[1] eq 'VERBbe'
-    && $recoded_array_ref->[2] eq 'NOUNcan',
+    _compare_arrays(
+        $recoded_array_ref,
+        [ qw( VERBcan VERBbe NOUNcan ) ],
+    ),
     'Subroutine _prepend_unit_with_category() works correctly'
 );
 
 
+#-----------------------------------------------------------------------------
+# Subroutine _compare_arrays
+#-----------------------------------------------------------------------------
+# Synopsis:      Compare two arrays and return 1 if they're identical or
+#                0 otherwise.
+# Arguments:     - two array references
+# Return values: - 0 or 1.
+#-----------------------------------------------------------------------------
+
+sub _compare_arrays {
+    my ( $first_array_ref, $second_array_ref ) = @_;
+    return 0 if @$first_array_ref != @$second_array_ref;
+    foreach my $index ( 0..@$first_array_ref-1 ) {
+        return 0 if    $first_array_ref->[$index]
+                    ne $second_array_ref->[$index];
+    }
+    return 1;
+}
 

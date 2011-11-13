@@ -3,7 +3,7 @@ package Lingua::Diversity;
 use Moose;
 use Moose::Util::TypeConstraints;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use Lingua::Diversity::Result;
 use Lingua::Diversity::X;
@@ -92,7 +92,7 @@ Lingua::Diversity - Measuring diversity of text units
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity version 0.02.
+This documentation refers to Lingua::Diversity version 0.03.
 
 =head1 SYNOPSIS
 

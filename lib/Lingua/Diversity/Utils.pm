@@ -14,13 +14,13 @@ our @EXPORT_OK   = qw(
     split_tagged_text
 );
 
-our $VERSION     = 0.02;
+our $VERSION     = 0.03;
 
 use Lingua::Diversity::X;
 
 
 #=============================================================================
-# Subroutines
+# Public subroutines
 #=============================================================================
 
 #-----------------------------------------------------------------------------
@@ -65,6 +65,12 @@ sub split_text {
 # Parameters:    - taggged_text (required): a Lingua::TreeTagger::TaggedText.
 #                - unit (required):         'original', 'lemma', or 'tag'.
 #                - category:                'lemma', or 'tag'.
+#                - condition:               a hash ref with following keys:
+#                   - mode:     'include' (default) or 'exclude'.
+#                   - logical:  'and' (default) or 'or'.
+#                   - original:  a regexp.
+#                   - lemma:     a regexp.
+#                   - tag:       a regexp.
 # Return values: - A reference to an array of units.
 #                - An optional reference to an array of categories.
 #-----------------------------------------------------------------------------
@@ -91,6 +97,37 @@ sub split_tagged_text {
         if ref( $parameter{'tagged_text'} )
            ne 'Lingua::TreeTagger::TaggedText';
 
+    # If parameter 'condition' is provided...
+    if ( exists $parameter{'condition'} ) {
+
+        # If it has key 'mode'...
+        if  ( exists $parameter{'condition'}{'mode'} ) {
+
+            # ... its value must be 'include' or 'exclude'...
+            Lingua::Diversity::X::Utils::SplitTaggedTextWrongModeParam->throw()
+                if $parameter{'condition'}{'mode'} ne 'include'
+                && $parameter{'condition'}{'mode'} ne 'exclude'
+        }
+        # Default is 'include'.
+        else { $parameter{'condition'}{'mode'} = 'include'; }
+
+        # If it has key 'logical'...
+        if  ( exists $parameter{'condition'}{'logical'} ) {
+
+            # ... its value must be 'and' or 'or'...
+            Lingua::Diversity::X::Utils::SplitTaggedTextWrongLogicalParam->throw()
+                if $parameter{'condition'}{'logical'} ne 'and'
+                && $parameter{'condition'}{'logical'} ne 'or'
+        }
+        # Default is 'and'.
+        else { $parameter{'condition'}{'logical'} = 'and'; }
+
+        # Set default 'match all' regexp for 'original', 'lemma', and 'tag'...
+        $parameter{'condition'}{'original'} ||= qr{^.*$};
+        $parameter{'condition'}{'lemma'}    ||= qr{^.*$};
+        $parameter{'condition'}{'tag'}      ||= qr{^.*$};
+    }
+
     my @units;
 
     # If parameter 'category' is provided...
@@ -108,6 +145,12 @@ sub split_tagged_text {
 
             # Skip SGML tags.
             next TOKEN if $token->is_SGML_tag();
+
+            # Skip based on 'condition' parameter...
+            next if _should_skip(
+                $parameter{'condition'},
+                $token,
+            );
 
                      # Unit param value...              # Token attribute...
             my $unit = $parameter{'unit'} eq 'original' ? $token->original()
@@ -139,6 +182,12 @@ sub split_tagged_text {
         # Skip SGML tags.
         next TOKEN if $token->is_SGML_tag();
 
+        # Skip based on 'condition' parameter...
+        next if _should_skip(
+            $parameter{'condition'},
+            $token,
+        );
+        
                  # Unit param value...              # Token attribute...
         my $unit = $parameter{'unit'} eq 'original' ? $token->original()
                  : $parameter{'unit'} eq 'lemma'    ? $token->lemma()
@@ -154,6 +203,110 @@ sub split_tagged_text {
 }
 
 
+#=============================================================================
+# Private subroutines
+#=============================================================================
+
+#-----------------------------------------------------------------------------
+# Subroutine _should_skip
+#-----------------------------------------------------------------------------
+# Synopsis:      Tell whether a Lingua::TreeTagger::Token should be skipped
+#                based on a given condition.
+# Arguments:     - A Lingua::TreeTagger::Token.
+#                - A reference to a hash with the following keys:
+#                   - mode:     'include' (default) or 'exclude'.
+#                   - logical:  'and' (default) or 'or'.
+#                   - original:  a regexp.
+#                   - lemma:     a regexp.
+#                   - tag:       a regexp.
+# Return values: - 1 (skip) or 0 (don't skip).
+#-----------------------------------------------------------------------------
+
+sub _should_skip {
+    my ( $condition_ref, $token ) = @_;
+    
+    # Don't skip if condition is not defined.
+    return 0 if ! defined $condition_ref;
+
+    my $token_matches_condition;
+    
+    # In case of logical 'and'...
+    if ( $condition_ref->{'logical'} eq 'and' ) {
+
+        # Token matches condition...
+        $token_matches_condition = 1;
+
+        # ... unless none of 'original', 'lemma', and 'tag' is specified...
+        if (
+               ! exists $condition_ref->{'original'}
+            && ! exists $condition_ref->{'lemma'}
+            && ! exists $condition_ref->{'tag'}
+        ) {
+            $token_matches_condition = 0;
+        }
+        # ... or at least one of 'original', 'lemma', and 'tag' is
+        # specified and doesn't match...
+        elsif (
+            (
+                exists $condition_ref->{'original'}
+             && $token->original()  !~ $condition_ref->{'original'}
+            )
+            ||
+            (
+                exists $condition_ref->{'lemma'}
+             && $token->lemma()     !~ $condition_ref->{'lemma'}
+            )
+            ||
+            (
+                exists $condition_ref->{'tag'}
+             && $token->tag()       !~ $condition_ref->{'tag'}
+            )
+        ) {
+            $token_matches_condition = 0;
+        }
+    }
+    # In case of logical 'or'...
+    else {
+
+        # Token doesn't match condition...
+        $token_matches_condition = 0;
+
+        # Unless at least one of 'original', 'lemma', and 'tag' is
+        # specified and matches...
+        if (
+            (
+                exists $condition_ref->{'original'}
+             && $token->original()  =~ $condition_ref->{'original'}
+            )
+            ||
+            (
+                exists $condition_ref->{'lemma'}
+             && $token->lemma()     =~ $condition_ref->{'lemma'}
+            )
+            ||
+            (
+                exists $condition_ref->{'tag'}
+             && $token->tag()       =~ $condition_ref->{'tag'}
+            )
+        ) {
+            $token_matches_condition = 1;
+        }
+    }
+
+    # Skip if condition matches in 'exclude' mode...
+    return 1 if    $token_matches_condition
+                && $condition_ref->{'mode'} eq 'exclude';
+
+    # Skip if condition doesn't match in 'include' mode...
+    return 1 if    ( ! $token_matches_condition )
+                && $condition_ref->{'mode'} eq 'include';
+
+    # Else don't skip.
+    return 0;
+}
+
+
+
 1;
 
 
@@ -167,7 +320,7 @@ derived from L<Lingua::Diversity>
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity::Utils version 0.02.
+This documentation refers to Lingua::Diversity::Utils version 0.03.
 
 =head1 SYNOPSIS
 
@@ -196,10 +349,20 @@ This documentation refers to Lingua::Diversity::Utils version 0.02.
     );
 
     # ... or get a reference to an array of wordforms and an array of lemmas.
+    ( $wordform_array_ref, my $lemma_array_ref )= split_tagged_text(
+        'tagged_text'   => $tagged_text,
+        'unit'          => 'original',
+        'category'      => 'lemma',
+    );
+
+    # Conditions may be imposed on the selection of tokens...
     ( $wordform_array_ref, $lemma_array_ref )= split_tagged_text(
         'tagged_text'   => $tagged_text,
         'unit'          => 'original',
         'category'      => 'lemma',
+        'condition'     => {
+            'tag'       => qr{^NNS?$},
+        },
     );
 
 
@@ -239,7 +402,7 @@ Given a L<Lingua::TreeTagger::TaggedText> object, return a reference to the
 array of units (e.g. wordforms). Optionally, return a second reference to the
 array of categories (e.g. lemmas).
 
-The subroutine requires two named parameters and may take up to three of them.
+The subroutine requires two named parameters and may take up to four of them.
 
 =over 4
 
@@ -259,6 +422,43 @@ object!
 The L<Lingua::TreeTagger::Token> attribute (either 'lemma' or 'tag') that
 should be used to build the category array. NB: make sure the requested
 attribute is available in the L<Lingua::TreeTagger::TaggedText> object!
+
+=item condition
+
+A reference to a hash specifying conditional inclusion or exclusion of tokens.
+The hash may have a 'mode' key, a 'logical' key and up to three keys among
+'original', 'lemma', and 'tag':
+
+=over 4
+
+=item mode
+
+A string indicating whether the condition specifies which tokens should
+be included (value 'include') or excluded (value 'exclude'). Default value is
+'include'.
+
+=item logical
+
+A string indicating whether the conditions set with the 'original', 'lemma',
+and 'tag' keys (see below) must all be satisfied (value 'and') or whether it
+suffices that one of them is satisfied (value 'or'). Default value is 'and'.
+
+=item original
+
+A regular expression specifying the 'original' attribute of tokens to be
+included/excluded.
+
+=item lemma
+
+A regular expression specifying the 'lemma' attribute of tokens to be
+included/excluded.
+
+=item tag
+
+A regular expression specifying the 'tag' attribute of tokens to be
+included/excluded.
+
+=back
 
 =back
 
