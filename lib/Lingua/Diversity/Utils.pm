@@ -14,7 +14,8 @@ our @EXPORT_OK   = qw(
     split_tagged_text
 );
 
-our $VERSION     = 0.03;
+our $VERSION     = 0.04;
+
 
 use Lingua::Diversity::X;
 
@@ -162,8 +163,8 @@ sub split_tagged_text {
             push @units, $unit;
 
                          # Category param value...       # Token attribute...
-            my $category = $parameter{'unit'} eq 'lemma' ? $token->lemma()
-                         :                                 $token->tag()
+            my $category = $parameter{'category'} eq 'lemma' ? $token->lemma()
+                         :                                     $token->tag()
                          ;
 
             # Add category to array.
@@ -381,7 +382,7 @@ use of a class derived from L<Lingua::Diversity>.
 Split a text into units (typically words), delete empty units, and return a
 reference to the array of units.
 
-The subroutine requires one named parameter and may take up to two of them.
+The subroutine takes one required and one optional named parameter.
 
 =over 4
 
@@ -412,51 +413,51 @@ The Lingua::TreeTagger::TaggedText object to be split.
 
 =item unit (required)
 
-The L<Lingua::TreeTagger::Token> attribute (either 'original', 'lemma', or
-'tag') that should be used to build the unit array. NB: make sure the
+The L<Lingua::TreeTagger::Token> attribute (either I<original>, I<lemma>, or
+I<tag>) that should be used to build the unit array. NB: make sure the
 requested attribute is available in the L<Lingua::TreeTagger::TaggedText>
 object!
 
 =item category
 
-The L<Lingua::TreeTagger::Token> attribute (either 'lemma' or 'tag') that
+The L<Lingua::TreeTagger::Token> attribute (either I<lemma> or I<tag>) that
 should be used to build the category array. NB: make sure the requested
 attribute is available in the L<Lingua::TreeTagger::TaggedText> object!
 
 =item condition
 
 A reference to a hash specifying conditional inclusion or exclusion of tokens.
-The hash may have a 'mode' key, a 'logical' key and up to three keys among
-'original', 'lemma', and 'tag':
+The hash may have a I<mode> key, a I<logical> key and up to three keys among
+I<original>, I<lemma>, and I<tag>:
 
 =over 4
 
 =item mode
 
 A string indicating whether the condition specifies which tokens should
-be included (value 'include') or excluded (value 'exclude'). Default value is
-'include'.
+be included (value I<include>) or excluded (value I<exclude>). Default
+is I<include>.
 
 =item logical
 
-A string indicating whether the conditions set with the 'original', 'lemma',
-and 'tag' keys (see below) must all be satisfied (value 'and') or whether it
-suffices that one of them is satisfied (value 'or'). Default value is 'and'.
+A string indicating whether the conditions set with the I<original>, I<lemma>,
+and I<tag> keys (see below) must all be satisfied (value I<and>) or whether it
+suffices that one of them be satisfied (value I<or>). Default is I<and>.
 
 =item original
 
-A regular expression specifying the 'original' attribute of tokens to be
-included/excluded.
+A regular expression specifying the I<original> attribute of tokens to be
+in-/excluded.
 
 =item lemma
 
-A regular expression specifying the 'lemma' attribute of tokens to be
-included/excluded.
+A regular expression specifying the I<lemma> attribute of tokens to be
+in-/excluded.
 
 =item tag
 
-A regular expression specifying the 'tag' attribute of tokens to be
-included/excluded.
+A regular expression specifying the I<tag> attribute of tokens to be
+in-/excluded.
 
 =back
 
@@ -468,41 +469,55 @@ included/excluded.
 
 =over 4
 
-=item Missing parameter 'text' in call to subroutine C<split_text()>
+=item Missing parameter 'text' in call to subroutine split_text()
 
 This exception is raised when subroutine C<split_text()> is called without a
-parameter named 'text' (whose value should be a reference to a string).
+parameter named I<text> (whose value should be a reference to a string).
 
 =item Missing parameter 'tagged_text' in call to subroutine
-C<split_tagged_text()>
+split_tagged_text()
 
 This exception is raised when subroutine C<split_tagged_text()> is called
-without a parameter named 'tagged_text').
+without a parameter named I<tagged_text>.
 
-=item Parameter 'tagged_text' in call to subroutine C<split_tagged_text()>
-must be a L<Lingua::TreeTagger::TaggedText> object
+=item Parameter 'tagged_text' in call to subroutine split_tagged_text()
+must be a Lingua::TreeTagger::TaggedText object
 
 This exception is raised when subroutine C<split_tagged_text()> is called
-with a parameter named 'tagged_text' whose value is not a
+with a parameter named I<tagged_text> whose value is not a
 L<Lingua::TreeTagger::TaggedText> object.
 
-=item Missing parameter 'unit' in call to subroutine C<split_tagged_text()>
+=item Missing parameter 'unit' in call to subroutine split_tagged_text()
 
 This exception is raised when subroutine C<split_tagged_text()> is called
-without a parameter named 'unit').
+without a parameter named I<unit>.
 
-=item Parameter 'unit' in call to subroutine C<split_tagged_text()> must be
+=item Parameter 'unit' in call to subroutine split_tagged_text() must be
 either 'original', 'lemma', or 'tag'
 
 This exception is raised when subroutine C<split_tagged_text()> is called
-with a parameter named 'unit' whose value is not 'original', 'lemma', or
-'tag'.
+with a parameter named I<unit> whose value is not I<original>, I<lemma>, or
+I<tag>.
 
-=item Parameter 'category' in call to subroutine C<split_tagged_text()> must
+=item Parameter 'category' in call to subroutine split_tagged_text() must
 be either 'lemma' or 'tag'
 
 This exception is raised when subroutine C<split_tagged_text()> is called
-with a parameter named 'category' whose value is not 'lemma' or 'tag'.
+with a parameter named I<category> whose value is not I<lemma> or I<tag>.
+
+=item Key 'mode' of hash 'condition' in call to subroutine split_tagged_text()
+must have value either 'include' or 'exclude'
+
+This exception is raised when subroutine C<split_tagged_text()> is called
+with a parameter named I<condition> referring to a hash whose key I<mode> has
+another value than I<include> or I<exclude>.
+
+=item Key 'logical' of hash 'condition' in call to subroutine
+split_tagged_text() must have value either 'and' or 'or'
+
+This exception is raised when subroutine C<split_tagged_text()> is called
+with a parameter named I<condition> referring to a hash whose key I<mode> has
+another value than I<and> or I<or>.
 
 =back
 

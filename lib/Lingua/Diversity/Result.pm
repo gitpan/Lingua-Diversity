@@ -77,20 +77,20 @@ This documentation refers to Lingua::Diversity::Result version 0.02.
 
 =head1 DESCRIPTION
 
-This class implements the result of a Lingua::Diversity derived object's
+This class implements the result of a L<Lingua::Diversity> derived object's
 diversity measurement. All diversity measures return a main value stored in
-the Result's 'diversity' attribute. Those measures for which the main value
+the Result's I<diversity> attribute. Those measures for which the main value
 is an average may also return the corresponding variance and count (i.e.
-number of observations), which are then stored in the Result's 'variance'
-and 'count' attributes (this should be documented in the Lingua::Diversity
+number of observations), which are then stored in the Result's I<variance>
+and I<count> attributes (this should be documented in the L<Lingua::Diversity>
 derived class).
 
 =head1 CREATOR
 
 The creator (C<new()>) returns a new Lingua::Diversity::Result object.
-In principle, the end user should never use it directly since it is invoked
-directly by the C<measure()> and C<measure_per_category()> methods of a given
-Lingua::Diversity derived class.
+In principle, the end user should never call it directly since it is invoked
+by the C<measure()> and C<measure_per_category()> methods of a given
+L<Lingua::Diversity> derived class.
 
 The constructor takes one required and two optional named parameters:
 
@@ -102,13 +102,13 @@ A number characterizing the diversity measured in the data.
 
 =item variance
 
-If the value of the 'diversity' attribute is an average, this attribute
-may contain the corresponding variance.
+If the value of the I<diversity> attribute is an average, this attribute
+stores the corresponding variance.
 
 =item count
 
-If the value of the 'diversity' attribute is an average, this attribute
-may contain the corresponding number of observations. In the case of a
+If the value of the I<diversity> attribute is an average, this attribute
+stores the corresponding number of observations. In the case of a
 weighted average, the value of this attribute is the sum of weights, which
 needs not be an integer.
 
@@ -120,15 +120,15 @@ needs not be an integer.
 
 =item get_diversity()
 
-Getter for the 'diversity' attribute.
+Getter for the I<diversity> attribute.
 
 =item get_variance() and has_variance()
 
-Getter and predicate for the 'variance' attribute.
+Getter and predicate for the I<variance> attribute.
 
 =item get_count() and has_count()
 
-Getter and predicate for the 'count' attribute.
+Getter and predicate for the I<count> attribute.
 
 =back
 
@@ -140,6 +140,15 @@ L<Lingua::Diversity>.
 =head1 BUGS AND LIMITATIONS
 
 There are no known bugs in this module.
+
+It has been designed under the assumption that a unified set of fields would
+be convenient to characterize the output of various diversity measures. It
+turns out that this assumption makes it necessary to leave a lot of useful
+information out of the results, because the output of every diversity measure
+has some specificity (besides commonalities with other measures). In a future
+version, this could be solved by making the Lingua::Diversity::Class (at least
+partly) abstract, and by designing a derived class for each diversity
+measure.
 
 Please report problems to Aris Xanthos (aris.xanthos@unil.ch)
 

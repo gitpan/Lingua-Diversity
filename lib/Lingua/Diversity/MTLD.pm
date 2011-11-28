@@ -3,15 +3,12 @@ package Lingua::Diversity::MTLD;
 use Moose;
 use Moose::Util::TypeConstraints;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 extends 'Lingua::Diversity';
 
-use Lingua::Diversity::Internals qw(
-    _get_average
-    _validate_size
-    _prepend_unit_with_category
-);
+use Lingua::Diversity::Variety;
+use Lingua::Diversity::Internals qw( _get_average );
 
 
 #=============================================================================
@@ -23,6 +20,8 @@ enum 'WeightingMode', [ qw( within_only within_and_between ) ];
 subtype 'BetweenZeroAndOneExcl',
     as 'Num',
     where { $_ > 0 && $_ < 1 };
+
+no Moose::Util::TypeConstraints;
 
 
 #=============================================================================
@@ -47,84 +46,20 @@ has 'weighting_mode' => (
 
 
 #=============================================================================
-# Public instance methods.
+# Private instance methods.
 #=============================================================================
 
 #-----------------------------------------------------------------------------
-# Method measure
+# Method _measure
 #-----------------------------------------------------------------------------
-# Synopsis:      Apply the Resampling diversity measure.
-# Arguments:     - A reference to an array of units.
+# Synopsis:      Apply MTLD, possibly per category.
+# Arguments:     - A reference to a validated array of recoded units.
+#                - An optional reference to a validated array of categories.
 # Return values: - A Lingua::Diversity::Result object.
 #-----------------------------------------------------------------------------
 
-sub measure {
-    my ( $self, $array_ref ) = @_;
-
-    # Validate argument array...
-    _validate_size(
-        'unit_array_ref'    => $array_ref,
-    );
-    
-    # Get factor length Average, Variance, and Count (left-to-right pass)...
-    my @left_to_right_AVC = $self->_get_factor_length_average(
-        $array_ref
-    );
-
-    # Right-to-left pass...
-    my @right_to_left_AVC = $self->_get_factor_length_average(
-        [ reverse @$array_ref ]
-    );
-
-    # Assign weights if requested.
-    my $weights_ref = (
-        $self->get_weighting_mode() eq 'within_only'     ?
-        [ 1, 1 ]                                         :
-        [ $left_to_right_AVC[2], $right_to_left_AVC[2] ]
-    );
-    
-    # Get average results (between the two passes)...
-    my %result;
-    my @fields = qw( average variance count );
-    foreach my $field ( @fields ) {
-        ( $result{$field} ) = _get_average(
-            [ shift( @left_to_right_AVC ), shift( @right_to_left_AVC ) ],
-            $weights_ref,
-        );
-    }
-    
-    # Create, fill, and return a new Result object...
-    return Lingua::Diversity::Result->new(
-        'diversity' => $result{'average'},
-        'variance'  => $result{'variance'},
-        'count'     => $result{'count'},
-    );
-}
-
-
-#-----------------------------------------------------------------------------
-# Method measure_per_category
-#-----------------------------------------------------------------------------
-# Synopsis:      Apply the selected measure per category.
-# Arguments:     - A reference to an array of units (in the text's order).
-#                - A reference to an array of categories (in the same order).
-# Return values: - A Lingua::Diversity::Result object.
-#-----------------------------------------------------------------------------
-
-sub measure_per_category {
-    my ( $self, $unit_array_ref, $category_array_ref ) = @_;
-
-    # Validate argument arrays...
-    _validate_size(
-        'unit_array_ref'        => $unit_array_ref,
-        'category_array_ref'    => $category_array_ref,
-    );
-
-    # Prepend each unit with its category...
-    my $recoded_unit_array_ref = _prepend_unit_with_category(
-        $unit_array_ref,
-        $category_array_ref,
-    );
+sub _measure {
+    my ( $self, $recoded_unit_array_ref, $category_array_ref ) = @_;
 
     # Get factor length Average, Variance, and Count (left-to-right pass)...
     my @left_to_right_AVC = $self->_get_factor_length_average(
@@ -133,9 +68,12 @@ sub measure_per_category {
     );
 
     # Right-to-left pass...
+    my $reverse_category_array_ref = defined $category_array_ref      ?
+                                     [ reverse @$category_array_ref ] :
+                                     undef                            ;
     my @right_to_left_AVC = $self->_get_factor_length_average(
         [ reverse @$recoded_unit_array_ref ],
-        [ reverse @$category_array_ref ]
+        $reverse_category_array_ref
     );
 
     # Assign weights if requested.
@@ -154,7 +92,7 @@ sub measure_per_category {
             $weights_ref,
         );
     }
-
+    
     # Create, fill, and return a new Result object...
     return Lingua::Diversity::Result->new(
         'diversity' => $result{'average'},
@@ -164,28 +102,24 @@ sub measure_per_category {
 }
 
 
-
-#=============================================================================
-# Private instance methods.
-#=============================================================================
-
 #-----------------------------------------------------------------------------
 # Method _get_factor_length_average
 #-----------------------------------------------------------------------------
 # Synopsis:      Computes factor length average, variance, and count.
-# Arguments:     - A reference to an array of units (required).
-#                - A reference to an array of categories (optional).
+# Arguments:     - A reference to a validated array of (recoded) units.
+#                - An optional reference to a validated array of categories.
 # Return values: - A Lingua::Diversity::Result object.
 #-----------------------------------------------------------------------------
 
 sub _get_factor_length_average {
     my ( $self, $unit_array_ref, $category_array_ref ) = @_;
 
-    my ( @factor_lengths, @factor_weights );
-    my ( %unit_type_list, %category_type_list );
-
-    # Get type-token ratio threshold.
+    # Get threshold.
     my $threshold = $self->get_threshold();
+
+    my ( @factor_lengths, @factor_weights );
+    
+    my ( %unit_type_list, %category_type_list );
 
     # Initialize token count and type-token ratio.
     my ( $token_count, $type_token_ratio ) = ( 0, 1 );
@@ -195,7 +129,7 @@ sub _get_factor_length_average {
 
         # Increase token count.
         $token_count++;
-        
+
         # Get and store unit type for this token...
         my $unit = $unit_array_ref->[$token_index];
         $unit_type_list{$unit} = 1;
@@ -214,10 +148,10 @@ sub _get_factor_length_average {
             $type_token_ratio /= keys( %category_type_list );
         }
 
-        # If type-token ratio is less than or equal to threshold...
+        # Perform requested comparison...
         if ( $type_token_ratio <= $threshold ) {
 
-            # Store current factor length (i.e. token count) and weight (1)...
+            # Store current factor length (token count) and weight (1)...
             push @factor_lengths, $token_count;
             push @factor_weights, 1;
 
@@ -230,14 +164,27 @@ sub _get_factor_length_average {
     }
 
     # If there is a 'partial' factor (see McCarthy & Jarvis 2010)...
-    if ( $type_token_ratio < 1 ) {
+    if ( $token_count > 0 ) {
 
-        # Get and store factor weight (i.e. proportion of threshold attained).
-        my $proportion_threshold = ( 1-$type_token_ratio ) / ( 1-$threshold );
-        push @factor_weights, $proportion_threshold;
-        
-        # Interpolate and store factor length.
-        push @factor_lengths, $token_count / $proportion_threshold;
+        # If TTR is 1 and there's no factor yet, add 1 of length 0...
+        if ( $type_token_ratio == 1 && @factor_lengths == 0 ) {
+            push @factor_weights, 1;
+            push @factor_lengths, 0;
+        }
+
+        # Otherwise, if TTR < 1...
+        elsif ( $type_token_ratio < 1 ) {
+
+            # Get and store weight (proportion of threshold attained).
+            my $proportion_threshold =     ( 1 - $type_token_ratio )
+                                     * 1 / ( 1 - $threshold )
+                                     ;
+
+            push @factor_weights, $proportion_threshold;
+
+            # Interpolate and store factor length.
+            push @factor_lengths, $token_count / $proportion_threshold;
+        }
     }
 
     # Compute and return factor length average, variance, and count.
@@ -259,11 +206,11 @@ __END__
 
 =head1 NAME
 
-Lingua::Diversity::MTLD - 'MTLD' method for measuring diversity
+Lingua::Diversity::MTLD - 'MTLD' method for measuring diversity of text units
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity::MTLD version 0.02.
+This documentation refers to Lingua::Diversity::MTLD version 0.03.
 
 =head1 SYNOPSIS
 
@@ -319,13 +266,13 @@ This documentation refers to Lingua::Diversity::MTLD version 0.02.
 
 =head1 DESCRIPTION
 
-This module implements the 'MTLD' method for measuring the diversity
+This module implements the I<MTLD> method for measuring the diversity
 of text units. MTLD stands for Measure of Textual Lexical Diversity, which is
 also known as LDAT (Lexical Diversity Assessment Tool), cf. McCarthy, P.M., &
-Jarvis, S. (2010) 'MTLD, vocd-D, and HD-D: A validation study of sophisticated
-approaches to lexical diversity assessment', Behavior Research Methods, 42(2):
-381-392
-(L<read it online|http://www.springerlink.com/content/257587jm46601751/>).
+Jarvis, S. (2010). MTLD, vocd-D, and HD-D: A validation study of sophisticated
+approaches to lexical diversity assessment, I<Behavior Research Methods,
+42(2)>: 381-392 (L<read it
+online|http://www.springerlink.com/content/257587jm46601751/>).
 
 The MTLD method is based on the type-token ratio of a text, i.e. the ratio of
 the number of distinct words--or more generally text units--to the total
@@ -336,7 +283,7 @@ ratio above a specified threshold, which is set to 0.72 by McCarthy and Jarvis
 
 The present implementation also returns the variance of factor length, as well
 as the number of observations, which in most cases will not be an integer (see
-the notion of 'partial factor' in McCarthy and Jarvis (2010) for a detailed
+the notion of I<partial factor> in McCarthy and Jarvis (2010) for a detailed
 explanation of why it is so).
 
 This implementation also attempts to generalize the authors' original idea to
@@ -354,7 +301,7 @@ takes two optional named parameters:
 
 The TTR value which a sequence of contiguous text units must maintain to
 constitute a 'factor'. It should be comprised between 0 and 1 exclusive.
-Default value is 0.72, following McCarthy and Jarvis (2010).
+Default is 0.72.
 
 =item weighting_mode
 
@@ -365,8 +312,8 @@ value that is finally reported (the two variances are also averaged). This
 attribute indicates whether the reported average should itself be weighted
 according to the potentially different number of observations in the two
 passes (value 'within_and_between'), or not (value 'within_only'). The default
-value is 'within_only', as in McCarthy and Jarvis (2010), although the
-author of this implementation finds it more consistent to select
+value is 'within_only', to conform with McCarthy and Jarvis (2010), although
+the author of this implementation finds it more consistent to select
 'within_and_between'.
 
 =back
@@ -377,11 +324,11 @@ author of this implementation finds it more consistent to select
 
 =item get_threshold() and set_threshold()
 
-Getter and setter for the threshold attribute.
+Getter and setter for the I<threshold> attribute.
 
 =item get_weighting_mode() and set_weighting_mode()
 
-Getter and setter for the weighting_mode attribute.
+Getter and setter for the I<weighting_mode> attribute.
 
 =back
 
@@ -391,7 +338,7 @@ Getter and setter for the weighting_mode attribute.
 
 =item measure()
 
-Apply the diversity measure and return the result in a new
+Apply the MTLD measure and return the result in a new
 Lingua::Diversity::Result object. The result includes the average, variance,
 and number of observations.
 
@@ -414,7 +361,9 @@ observations.
 The original method described by McCarthy and Jarvis (2010) is modified by
 replacing the type count in the type-token ratio with the number of unit types
 (e.g. wordform types) divided by the number of category types (e.g. lemma
-types).
+types). First experiments suggest that the default threshold value (0.72) is
+inappropriate in this case, and should be replaced by a much smaller value
+(e.g. 0.1).
 
 The method requires a reference to a non-empty array of text units and a
 reference to a non-empty array of categories as arguments. Units and
@@ -432,21 +381,21 @@ categories.
 
 =over 4
 
-=item Method [C<measure()>/C<measure_per_category()>] must be called with a
+=item Method [measure()/measure_per_category()] must be called with a
 reference to an array as 1st argument
 
 This exception is raised when either method C<measure()> or method
 C<measure_per_category()> is called without a reference to an array as a
 first argument.
 
-=item Method C<measure_per_category()> must be called with a reference to an
+=item Method measure_per_category() must be called with a reference to an
 array as 2nd argument
 
 This exception is raised when method C<measure_per_category()> is called
 without a reference to an array as a second argument.
 
-=item Method [C<measure()>/C<measure_per_category()>] was called with an array
-containing N item(s) while this measure requires at least 1 item(s)
+=item Method [measure()/measure_per_category()] was called with an array
+containing 0 item(s) while this measure requires at least 1 item(s)
 
 This exception is raised when either method C<measure()> or method
 C<measure_per_category()> is called with an empty array as argument.

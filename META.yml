@@ -1,5 +1,5 @@
 ---
-abstract: 'Measuring diversity of text units'
+abstract: 'measuring the diversity of text units'
 author:
   - 'Aris Xanthos <aris.xanthos@unil.ch>'
 build_requires:
@@ -15,26 +15,35 @@ name: Lingua-Diversity
 provides:
   Lingua::Diversity:
     file: lib/Lingua/Diversity.pm
-    version: 0.03
+    version: 0.04
   Lingua::Diversity::Internals:
     file: lib/Lingua/Diversity/Internals.pm
-    version: 0.02
+    version: 0.03
   Lingua::Diversity::MTLD:
     file: lib/Lingua/Diversity/MTLD.pm
-    version: 0.02
+    version: 0.03
   Lingua::Diversity::Result:
     file: lib/Lingua/Diversity/Result.pm
     version: 0.03
+  Lingua::Diversity::SamplingScheme:
+    file: lib/Lingua/Diversity/SamplingScheme.pm
+    version: 0.01
   Lingua::Diversity::Utils:
     file: lib/Lingua/Diversity/Utils.pm
-    version: 0.03
+    version: 0.04
+  Lingua::Diversity::VOCD:
+    file: lib/Lingua/Diversity/VOCD.pm
+    version: 0.01
+  Lingua::Diversity::Variety:
+    file: lib/Lingua/Diversity/Variety.pm
+    version: 0.01
   Lingua::Diversity::X:
     file: lib/Lingua/Diversity/X.pm
-    version: 0.02
+    version: 0.03
 requires:
   Exception::Class: 0
   Moose: 0
   perl: 5.006
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.03
+version: 0.04

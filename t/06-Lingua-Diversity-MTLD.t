@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 21;
+use Test::More tests => 16;
 
 # Module is usable...
 BEGIN {
@@ -22,12 +22,13 @@ cmp_ok(
 
 # Created object have all necessary methods defined...
 can_ok( $diversity, qw(
-    measure
-    measure_per_category
+    _measure
     _get_factor_length_average
 ) );
 
-my $unit_array_ref = [ qw( a b a b a b a b c b ) ];
+my $unit_array_ref          = [ qw( a  b  a  b  a  b  a  b  c  b  ) ];
+my $category_array_ref      = [ qw( A  A  B  B  B  A  A  A  A  B  ) ];
+my $recoded_unit_array_ref  = [ qw( Aa Ab Ba Bb Ba Ab Aa Ab Ac Bb ) ];
 
 my ( $average, $variance, $count ) = $diversity->_get_factor_length_average(
     $unit_array_ref,
@@ -53,15 +54,6 @@ is(
     sprintf( "%.3f", $count ),
     2.893,
     'Method _get_factor_length_average() correctly computes count (1 array)'
-);
-
-my $category_array_ref     = [ qw( A A B B B A A A A B ) ];
-
-use Lingua::Diversity::Internals qw( _prepend_unit_with_category );
-
-my $recoded_unit_array_ref = _prepend_unit_with_category(
-    $unit_array_ref,
-    $category_array_ref,
 );
 
 ( $average, $variance, $count ) = $diversity->_get_factor_length_average(
@@ -92,7 +84,19 @@ is(
     'Method _get_factor_length_average() correctly computes count (2 arrays)'
 );
 
-my $result = $diversity->measure( $unit_array_ref );
+# Method _get_factor_length_average(): fixed single partial factor bug...
+my @AVC = $diversity->_get_factor_length_average(
+    [ qw( a b c ) ],
+);
+ok(
+    _compare_arrays(
+        \@AVC,
+        [ ( 0, 0, 1 ) ]
+    ),
+    'Method _get_factor_length_average(): fixed single partial factor bug'
+);
+
+my $result = $diversity->_measure( $unit_array_ref );
 
 # Method _measure() correctly computes average...
 is(
@@ -115,32 +119,8 @@ is(
     'Method _measure() correctly computes count'
 );
 
-$result
-   = $diversity->measure_per_category( $unit_array_ref, $category_array_ref );
-
-# Method _measure_per_category() correctly computes average...
-is(
-    $result->get_diversity(),
-    3,
-    'Method _measure_per_category() correctly computes average'
-);
-
-# Method _measure_per_category() correctly computes variance...
-is(
-    sprintf( "%.3f", $result->get_variance() ),
-    0.222,
-    'Method _measure_per_category() correctly computes variance'
-);
-
-# Method _measure_per_category() correctly computes count...
-is(
-    $result->get_count(),
-    3,
-    'Method _measure_per_category() correctly computes count'
-);
-
 $diversity->set_weighting_mode( 'within_and_between' );
-$result = $diversity->measure( $unit_array_ref );
+$result = $diversity->_measure( $unit_array_ref );
 
 # Method _measure() correctly computes weighted average...
 is(
@@ -163,30 +143,25 @@ is(
     'Method _measure() correctly computes weighted count'
 );
 
-$result
-  = $diversity->measure_per_category( $unit_array_ref, $category_array_ref );
-
-# Method _measure_per_category() correctly computes weighted average...
-is(
-    $result->get_diversity(),
-    3,
-    'Method _measure_per_category() correctly computes weighted average'
-);
-
-# Method _measure_per_category() correctly computes weighted variance...
-is(
-    sprintf( "%.3f", $result->get_variance() ),
-    0.222,
-    'Method _measure_per_category() correctly computes weighted variance'
-);
-
-# Method _measure_per_category() correctly computes weighted count...
-is(
-    $result->get_count(),
-    3,
-    'Method _measure_per_category() correctly computes weighted count'
-);
 
 
+#-----------------------------------------------------------------------------
+# Subroutine _compare_arrays
+#-----------------------------------------------------------------------------
+# Synopsis:      Compare two arrays and return 1 if they're identical or
+#                0 otherwise.
+# Arguments:     - two array references
+# Return values: - 0 or 1.
+#-----------------------------------------------------------------------------
+
+sub _compare_arrays {
+    my ( $first_array_ref, $second_array_ref ) = @_;
+    return 0 if @$first_array_ref != @$second_array_ref;
+    foreach my $index ( 0..@$first_array_ref-1 ) {
+        return 0 if    $first_array_ref->[$index]
+                    ne $second_array_ref->[$index];
+    }
+    return 1;
+}
 
 

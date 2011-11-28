@@ -6,7 +6,7 @@ use strict;
 use warnings;
 use Carp;
 
-our $VERSION = 0.02;
+our $VERSION = 0.03;
 
 
 #=============================================================================
@@ -34,6 +34,41 @@ use Exception::Class (
         fields      => [ qw( class method ) ],
     },
 
+        'Lingua::Diversity::X::ValidateSizeMissingParam' => {
+        isa         => 'Lingua::Diversity::X::Internals',
+        description => 'Missing parameter in call to _validate_size',
+    },
+
+    'Lingua::Diversity::X::ValidateSizeMissing1stArrayRef' => {
+        isa         => 'Lingua::Diversity::X::Internals',
+        description => 'Missing 1st array ref in call to _validate_size',
+        fields      => [ qw( method ) ],
+    },
+
+    'Lingua::Diversity::X::ValidateSizeMissing2ndArrayRef' => {
+        isa         => 'Lingua::Diversity::X::Internals',
+        description => 'Missing 2nd array ref in call to _validate_size',
+        fields      => [ qw( method ) ],
+    },
+
+    'Lingua::Diversity::X::ValidateSizeArrayTooSmall' => {
+        isa         => 'Lingua::Diversity::X::Internals',
+        description => 'validate_size spotted a too small array',
+        fields      => [ qw( method num_items min_num_items ) ],
+    },
+
+    'Lingua::Diversity::X::ValidateSizeArrayTooLarge' => {
+        isa         => 'Lingua::Diversity::X::Internals',
+        description => 'validate_size spotted a too large array',
+        fields      => [ qw( method num_items max_num_items ) ],
+    },
+
+    'Lingua::Diversity::X::ValidateSizeArraysOfDifferentSize' => {
+        isa         => 'Lingua::Diversity::X::Internals',
+        description => 'validate_size spotted unevenly sized arrays',
+        fields      => [ qw( method num_units num_categories ) ],
+    },
+
     # Lingua::Diversity::Internals exceptions...
     #-------------------------------------------
 
@@ -42,40 +77,6 @@ use Exception::Class (
         description => 'Lingua::Diversity::Internals exception',
     },
 
-    'Lingua::Diversity::X::Internals::ValidateSizeMissingParam' => {
-        isa         => 'Lingua::Diversity::X::Internals',
-        description => 'Missing parameter in call to _validate_size',
-    },
-
-    'Lingua::Diversity::X::Internals::ValidateSizeMissing1stArrayRef' => {
-        isa         => 'Lingua::Diversity::X::Internals',
-        description => 'Missing 1st array ref in call to _validate_size',
-        fields      => [ qw( method ) ],
-    },
-
-    'Lingua::Diversity::X::Internals::ValidateSizeMissing2ndArrayRef' => {
-        isa         => 'Lingua::Diversity::X::Internals',
-        description => 'Missing 2nd array ref in call to _validate_size',
-        fields      => [ qw( method ) ],
-    },
-
-    'Lingua::Diversity::X::Internals::ValidateSizeArrayTooSmall' => {
-        isa         => 'Lingua::Diversity::X::Internals',
-        description => 'validate_size spotted a too small array',
-        fields      => [ qw( method num_items min_num_items ) ],
-    },
-
-    'Lingua::Diversity::X::Internals::ValidateSizeArrayTooLarge' => {
-        isa         => 'Lingua::Diversity::X::Internals',
-        description => 'validate_size spotted a too large array',
-        fields      => [ qw( method num_items max_num_items ) ],
-    },
-
-    'Lingua::Diversity::X::Internals::ValidateSizeArraysOfDifferentSize' => {
-        isa         => 'Lingua::Diversity::X::Internals',
-        description => 'validate_size spotted unevenly sized arrays',
-        fields      => [ qw( method num_units num_categories ) ],
-    },
 
     'Lingua::Diversity::X::Internals::GetAverageEmptyArray' => {
         isa         => 'Lingua::Diversity::X::Internals',
@@ -86,6 +87,16 @@ use Exception::Class (
         isa         => 'Lingua::Diversity::X::Internals',
         description => 'Unevenly sized array arguments in call to '
                      . '_get_average',
+    },
+
+    'Lingua::Diversity::X::Internals::SampleIndicesSampleSizeTooLarge' => {
+        isa         => 'Lingua::Diversity::X::Internals',
+        description => 'Sample size too large in call to _sample_indices',
+    },
+
+    'Lingua::Diversity::X::Internals::RenyiEntropyInvalidExponent' => {
+        isa         => 'Lingua::Diversity::X::Internals',
+        description => 'Invalid exponent in call to _sample_indices',
     },
 
     # Lingua::Diversity::Utils exceptions...
@@ -165,23 +176,20 @@ sub Lingua::Diversity::X::AbstractMethod::full_message {
          ;
 }
 
-# Lingua::Diversity::Internals exceptions...
-#-------------------------------------------
-
-sub Lingua::Diversity::X::Internals::ValidateSizeMissingParam::full_message {
+sub Lingua::Diversity::X::ValidateSizeMissingParam::full_message {
     my ( $self ) = @_;
     return q{Missing parameter 'unit_array_ref' in call to subroutine }
          . q{_validate_size()};
 }
 
-sub Lingua::Diversity::X::Internals::ValidateSizeMissing1stArrayRef::full_message {
+sub Lingua::Diversity::X::ValidateSizeMissing1stArrayRef::full_message {
     my ( $self ) = @_;
     return q{Method }
          . $self->method()
          . q{() must be called with a reference to an array as 1st argument}
 }
 
-sub Lingua::Diversity::X::Internals::ValidateSizeArrayTooSmall::full_message {
+sub Lingua::Diversity::X::ValidateSizeArrayTooSmall::full_message {
     my ( $self ) = @_;
     return q{Method }
          . $self->method()
@@ -192,7 +200,7 @@ sub Lingua::Diversity::X::Internals::ValidateSizeArrayTooSmall::full_message {
          . q{ item(s)};
 }
 
-sub Lingua::Diversity::X::Internals::ValidateSizeArrayTooLarge::full_message {
+sub Lingua::Diversity::X::ValidateSizeArrayTooLarge::full_message {
     my ( $self ) = @_;
     return q{Method }
          . $self->method()
@@ -203,14 +211,14 @@ sub Lingua::Diversity::X::Internals::ValidateSizeArrayTooLarge::full_message {
          . q{ item(s)};
 }
 
-sub Lingua::Diversity::X::Internals::ValidateSizeMissing2ndArrayRef::full_message {
+sub Lingua::Diversity::X::ValidateSizeMissing2ndArrayRef::full_message {
     my ( $self ) = @_;
     return q{Method }
          . $self->method()
          . q{() must be called with a reference to an array as 2nd argument}
 }
 
-sub Lingua::Diversity::X::Internals::ValidateSizeArraysOfDifferentSize::full_message {
+sub Lingua::Diversity::X::ValidateSizeArraysOfDifferentSize::full_message {
     my ( $self ) = @_;
     return q{Method }
          . $self->method()
@@ -220,6 +228,9 @@ sub Lingua::Diversity::X::Internals::ValidateSizeArraysOfDifferentSize::full_mes
          . $self->num_categories()
          . q{ category(-ies)};
 }
+
+# Lingua::Diversity::Internals exceptions...
+#-------------------------------------------
 
 sub Lingua::Diversity::X::Internals::GetAverageEmptyArray::full_message {
     my ( $self ) = @_;
@@ -231,6 +242,18 @@ sub Lingua::Diversity::X::Internals::GetAverageArraysOfDifferentSize::full_messa
     my ( $self ) = @_;
     return q{Subroutine '_get_average' was called with references to arrays }
          . q{of unequal size}
+}
+
+sub Lingua::Diversity::X::Internals::SampleIndicesSampleSizeTooLarge::full_message {
+    my ( $self ) = @_;
+    return q{The second argument of subroutine _sampled_indices() cannot be }
+         . q{larger than the first}
+}
+
+sub Lingua::Diversity::X::Internals::RenyiEntropyInvalidExponent::full_message {
+    my ( $self ) = @_;
+    return q{Parameter 'exponent' of subroutine _renyi_entropy() must be }
+         . q{between 0 and 1 inclusive}
 }
 
 # Lingua::Diversity::Utils exceptions...
@@ -294,11 +317,11 @@ __END__
 
 =head1 NAME
 
-Lingua::Diversity::X - Exception classes for Lingua::Diversity
+Lingua::Diversity::X - exception classes for Lingua::Diversity
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity:X version 0.02.
+This documentation refers to Lingua::Diversity:X version 0.03.
 
 =head1 DESCRIPTION
 

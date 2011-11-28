@@ -8,14 +8,22 @@ use Carp;
 
 use Exporter   ();
 
-our @ISA         = qw(Exporter);
-our @EXPORT_OK   = qw(
-    _validate_size
-    _get_average
-    _prepend_unit_with_category
-);
+our $VERSION     = 0.03;
 
-our $VERSION     = 0.02;
+our @ISA         = qw( Exporter );
+our %EXPORT_TAGS = (
+    'all' => [ qw(
+        _get_average
+        _sample_indices
+        _count_types
+        _count_frequency
+        _get_units_per_category
+        _shannon_entropy
+        _perplexity
+        _renyi_entropy
+    ) ],
+);
+Exporter::export_ok_tags( 'all' );
 
 use Lingua::Diversity::X;
 
@@ -23,87 +31,6 @@ use Lingua::Diversity::X;
 #=============================================================================
 # Subroutines
 #=============================================================================
-
-#-----------------------------------------------------------------------------
-# Subroutine _validate_size
-#-----------------------------------------------------------------------------
-# Synopsis:      Validate the array arguments of methods measure() and
-#                measure_per_category().
-# Parameters:    - unit_array_ref:     a non-empty array of text units.
-#                - category_array_ref: a non-empty array of categories.
-# Return values: None.
-#-----------------------------------------------------------------------------
-
-sub _validate_size {
-    my ( %parameter ) = @_;
-    
-    # Parameter 'unit_array_ref' is required...
-    Lingua::Diversity::X::Internals::ValidateSizeMissingParam->throw()
-        if ! exists $parameter{'unit_array_ref'};
-
-    # Get caller method...
-    my $method = ( caller(1) )[3];
-
-    # Parameter 'unit_array_ref' must be a ref to an array...
-    if ( ref $parameter{'unit_array_ref'} ne 'ARRAY' ) {
-        Lingua::Diversity::X::Internals::ValidateSizeMissing1stArrayRef->throw(
-            'method' => $method,
-        )
-    }
-
-    # Default min number of items is 1...
-    $parameter{'min_num_items'} ||= 1;
-    
-    # Get number of items in unit array.
-    my $num_items = @{ $parameter{'unit_array_ref'} };
-
-    # Validate min number of items...
-    if ( $num_items < $parameter{'min_num_items'} ) {
-        Lingua::Diversity::X::Internals::ValidateSizeArrayTooSmall->throw(
-            'method'        => $method,
-            'num_items'     => $num_items,
-            'min_num_items' => $parameter{'min_num_items'},
-        );
-    }
-
-    # Validate max number of items...
-    if (
-           defined $parameter{'max_num_items'}
-        && $num_items > $parameter{'max_num_items'}
-    ) {
-        Lingua::Diversity::X::Internals::ValidateSizeArrayTooLarge->throw(
-            'method'        => $method,
-            'num_items'     => $num_items,
-            'max_num_items' => $parameter{'max_num_items'},
-        );
-    }
-
-    # If caller is measure_per_category...
-    if ( $method =~ qr{measure_per_category$} ) {
-
-        # Parameter 'unit_array_ref' must be a ref to an array...
-        if ( ref $parameter{'category_array_ref'} ne 'ARRAY' ) {
-            Lingua::Diversity::X::Internals::ValidateSizeMissing2ndArrayRef->throw(
-                'method' => $method,
-            )
-        }
-
-        # Get number of items in category array.
-        my $num_categories = scalar @{ $parameter{'category_array_ref'} };
-
-        # Check that arrays have the same size...
-        if ( $num_items != $num_categories ) {
-            Lingua::Diversity::X::Internals::ValidateSizeArraysOfDifferentSize->throw(
-                'method'            => $method,
-                'num_units'         => $num_items,
-                'num_categories'    => $num_categories,
-            );
-        }
-    }
-
-    return;
-}
-
 
 #-----------------------------------------------------------------------------
 # Subroutine _get_average
@@ -127,12 +54,20 @@ sub _get_average {
     Lingua::Diversity::X::Internals::GetAverageEmptyArray->throw()
         if $number_of_items == 0;
 
+    # Special case if number of items = 1...
+    if ( $number_of_items == 1 ) {
+        my $count = defined $weight_array_ref ?
+                    $weight_array_ref->[0]    :
+                    1                         ;
+        return ( $number_array_ref->[0], 0, $count )
+    }
+    
     # Weight array must have the same size as number array (if provided)...
     if (
            defined $weight_array_ref
         && @$weight_array_ref != $number_of_items
     ) {
-        Lingua::Diversity::X::Internals::GetAverageArraysOfDifferentSize->throw()
+     Lingua::Diversity::X::Internals::GetAverageArraysOfDifferentSize->throw()
     }
 
     # Set the default, uniform weight if no weights were provided.
@@ -157,37 +92,221 @@ sub _get_average {
                  - $average * $average
                  ;
 
+    # Fix negative variances (precision error).
+    $variance = $variance < 0 ? 0 : $variance;
+    
     return $average, $variance, $sum_of_weights;
 }
 
 
 #-----------------------------------------------------------------------------
-# Subroutine _prepend_unit_with_category
+# Method _sample_indices
 #-----------------------------------------------------------------------------
-# Synopsis:      Prepend every unit in an array with its category.
-# Arguments:     - A reference to an array of units.
-#                - A reference to an array of categories of same size.
-# Return values: - A reference to an array of recoded units.
+# Synopsis:      Returns a reference to a list of random array indices.
+# Arguments:     - The size of the array.
+#                - The number of indices to be picked.
+# Return values: - A reference to an array of indices.
 #-----------------------------------------------------------------------------
 
-sub _prepend_unit_with_category {
-    my ( $unit_array_ref, $category_array_ref ) = @_;
+sub _sample_indices {
+    my ( $population_size, $sample_size ) = @_;
 
-    my @recoded_array;
-    
-    ITEM_INDEX:
-    foreach my $item_index ( 0..@$unit_array_ref-1 ) {
+    Lingua::Diversity::X::Internals::SampleIndicesSampleSizeTooLarge->throw()
+        if $sample_size > $population_size;
 
-        # Prepend unit with category and add to recoded array.
-        push @recoded_array,
-                $category_array_ref->[$item_index]
-              . $unit_array_ref->[$item_index]
-              ;
+    my @sampled_indices;
+
+    INDICES:
+    foreach my $num_processed_items ( 0..$population_size-1 ) {
+
+        # If current index is sampled...
+        if (
+            rand() <        ( $sample_size     - @sampled_indices      )
+                      * 1 / ( $population_size - $num_processed_items  )
+        ) {
+
+            # Add it to array.
+            push @sampled_indices, $num_processed_items;
+
+            # Exit loop if sample is complete.
+            last INDICES if @sampled_indices == $sample_size;
+        }
     }
-    
-    return \@recoded_array;
+
+    return \@sampled_indices;
 }
 
+
+#-----------------------------------------------------------------------------
+# Subroutine _count_frequency
+#-----------------------------------------------------------------------------
+# Synopsis:      Count the frequency of each item type in an array.
+# Arguments:     - A reference to an array of units.
+# Return values: - A reference to a frequency hash.
+#-----------------------------------------------------------------------------
+
+sub _count_frequency {
+    my ( $unit_array_ref, $category_array_ref ) = @_;
+    my %frequency;
+    foreach ( @$unit_array_ref ) { $frequency{$_}++; }
+    return \%frequency;
+}
+
+
+#-----------------------------------------------------------------------------
+# Subroutine _get_units_per_category
+#-----------------------------------------------------------------------------
+# Synopsis:      Build a hash whose keys are categories and whose values are
+#                references to corresponding lists of units.
+# Arguments:     - A reference to an array of units.
+#                - A reference to an array of categories.
+# Return values: - A reference to a hash.
+#-----------------------------------------------------------------------------
+
+sub _get_units_per_category {
+    my ( $unit_array_ref, $category_array_ref ) = @_;
+
+    my %units_in_category;
+
+    foreach my $index ( 0..@$unit_array_ref-1 ) {
+        push    @{ $units_in_category{$category_array_ref->[$index]} },
+                $unit_array_ref->[$index];
+    }
+    return \%units_in_category;
+}
+
+
+#-----------------------------------------------------------------------------
+# Subroutine _count_types
+#-----------------------------------------------------------------------------
+# Synopsis:      Count the number of distinct items in an array.
+# Arguments:     - A reference to an array.
+# Return values: - The number of distinct items.
+#-----------------------------------------------------------------------------
+
+sub _count_types {
+    my ( $array_ref ) = @_;
+    my %frequency;
+    foreach ( @$array_ref ) { $frequency{$_} = 1; }
+    return scalar keys %frequency;
+}
+
+
+#-----------------------------------------------------------------------------
+# Subroutine _shannon_entropy
+#-----------------------------------------------------------------------------
+# Synopsis:         Compute Shannon's entropy.
+# Arguments:        - A reference to an array.
+#                   - The log base (default is exp(1)).
+# Valeur de retour: - The entropy in the requested base.
+#-----------------------------------------------------------------------------
+
+sub _shannon_entropy {
+    my ( $array_ref, $base ) = @_;
+
+    # Default base is exp(1).
+    $base ||= exp(1);
+
+    # Count frequency.
+    my $frequency_ref = _count_frequency( $array_ref );
+
+    my( $sum, $weighted_sum_of_logs);
+
+    FREQUENCY:
+    foreach my $frequency ( values %$frequency_ref ) {
+
+        # Skip zero frequencies.
+        next if $frequency == 0;
+
+        # Increment sums...
+        $sum                  += $frequency;
+        $weighted_sum_of_logs += $frequency * log $frequency;
+    }
+
+    # Compute entropy.
+    my $entropy = log( $sum )
+                - $weighted_sum_of_logs / $sum;
+
+    return $entropy / log $base;
+}
+
+
+#-----------------------------------------------------------------------------
+# Subroutine _perplexity
+#-----------------------------------------------------------------------------
+# Synopsis:         Compute perplexity.
+# Arguments:        - A reference to an array.
+# Valeur de retour: - The perplexity.
+#-----------------------------------------------------------------------------
+
+sub _perplexity {
+    my ( $array_ref ) = @_;
+    return exp _shannon_entropy( $array_ref );
+}
+
+
+#-----------------------------------------------------------------------------
+# Subroutine _renyi_entropy
+#-----------------------------------------------------------------------------
+# Synopsis:         Compute Rényi's entropy.
+# Arguments:        - 'array_ref' => a reference to an array.
+#                   - 'exponent'  => a number between 0 and 1 inclusive
+#                                    (default is 0.5).
+#                   - 'base'      => the log base (default is exp(1)).
+# Valeur de retour: - The Rényi's entropy in the requested base.
+#-----------------------------------------------------------------------------
+
+sub _renyi_entropy {
+    my ( %parameter ) = @_;
+
+    # Default base is exp(1).
+    $parameter{'base'} ||= exp(1);
+
+    # Default exponent is 0.5..
+    my $exponent = defined $parameter{'exponent'} ?
+                   $parameter{'exponent'}         :
+                   0.5                            ;
+
+    # Check exponent...
+    Lingua::Diversity::X::Internals::RenyiEntropyInvalidExponent->throw()
+        if $exponent < 0 || $exponent > 1;
+
+    # Fallback on log number of types if needed...
+    return (log(_count_types($parameter{'array_ref'}))/log $parameter{'base'})
+        if $exponent == 0;
+
+    # Fallback on Shannon's entropy if needed...
+    return _shannon_entropy( $parameter{'array_ref'}, $parameter{'base'} )
+        if $exponent == 1;
+
+    # Count frequency.
+    my $frequency_ref = _count_frequency( $parameter{'array_ref'} );
+
+    my( $sum, $sum_to_the_exponent_th );
+
+    FREQUENCY:
+    foreach my $frequency ( values %$frequency_ref ) {
+
+        # Skip zero frequencies.
+        next if $frequency == 0;
+
+        # Increment sums...
+        $sum                    += $frequency;
+        $sum_to_the_exponent_th += $frequency**$exponent;
+    }
+
+    # Compute entropy.
+    my $entropy = 1 / ( 1-$exponent )
+                * log (
+                        ( 1/$sum )**$exponent
+                      * $sum_to_the_exponent_th
+                  );
+
+    return $entropy / log $parameter{'base'};
+}
+
+
+1;
 
 
 __END__
@@ -195,126 +314,93 @@ __END__
 
 =head1 NAME
 
-Lingua::Diversity::Internals - utility subroutines for developers of classes
-derived from Lingua::Diversity
+Lingua::Diversity::Internals - utility subroutines for classes derived from
+Lingua::Diversity
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity::Internals version 0.02.
+This documentation refers to Lingua::Diversity::Internals version 0.03.
 
 =head1 SYNOPSIS
 
-    package Lingua::Diversity::MyMeasure;
-
-    use Moose;
-
-    extends 'Lingua::Diversity';
-
-    use Lingua::Diversity::Internals qw(
-        _validate_size
-        _get_average
-        _prepend_unit_with_category
-    );
+    use Lingua::Diversity::Internals qw( :all );
     
-    sub measure {
-        my ( $self, $array_ref ) = @_;
+    # NB: the following subroutine calls are meant to illustrate the various
+    #     possibilities of this module -- the order in which they appear here
+    #     is not meaningful. Furthermore, it is assumed here that a number of
+    #     variables ($array_ref, $unit_array_ref, etc.) have been defined.
 
-        _validate_size(
-            'unit_array_ref'    => $array_ref,
-            'min_num_items'     => 50,
-            'max_num_items'     => 1000000,
-        );
+    # Get a random subsample of 20 items taken from an array...
+    my $sampled_indices_ref = _sample_indices(
+        scalar( @original_array ),
+        20,
+    )
+    my @subsample = @original_array[@$sampled_indices_ref];
 
-        # Further instructions, until at some point...
-        my @numbers = 1..100;
-        my (
-            $average,
-            $variance,
-            $num_observations,
-        ) = _get_average( \@numbers );
-        
-        # More instructions...
+    # Get the average, variance and count of a list of numbers...
+    my ( $average, $variance, $count ) = _get_average( \@numbers );
+
+    # Get the weighted average, variance and count of a list of numbers...
+    my( $average, $variance, $count ) = _get_average( \@numbers, \@weights );
+
+    # Get the number of types (distinct items) in an array...
+    my $number_of_types = _count_types( $array_ref );
+
+    # Get the frequency of types in an array...
+    my $freq_hash_ref = _count_frequency( $array_ref );
+    foreach my $item ( sort keys %$freq_hash_ref ) {
+        print $item, "\t", $freq_hash_ref->{$item}, "\n";
     }
 
-    sub measure_per_category {
-        my ( $self, $unit_array_ref, $category_array_ref ) = @_;
-
-        _validate_size(
-            'unit_array_ref'        => $unit_array_ref,
-            'category_array_ref'    => $category_array_ref,
-            'min_num_items'         => 50,
-            'max_num_items'         => 1000000,
-        );
-
-        # Recode units to avoid homophony...
-        my $recoded_unit_array_ref = _prepend_unit_with_category(
-            $unit_array_ref,
-            $category_array_ref,
-        );
-
-        # Further instructions, until at some point...
-        my @numbers = 1..100;
-        my @weights = 1..100;
-        my (
-            $weighted_average,
-            $weighted_variance,
-            $num_observations,
-        ) = _get_average( \@numbers, \@weights );
-
-        # Yet more instructions...
+    # Get the list of unit types associated to each category type...
+    my $units_in_category_hash_ref = _get_units_per_category(
+        $unit_array_ref,
+        $category_array_ref,
+    );
+    foreach my $category ( sort keys %$units_in_category_hash_ref ) {
+        print $category, "\t",
+              join( q{,}, $units_in_category_hash_ref->{$category} ), "\n";
     }
+
+    # Get the perplexity of items in an array...
+    my $perplexity = _perplexity( $array_ref );
+
+    # Get the shannon entropy of items in an array...
+    my $shannon_entropy = _shannon_entropy( $array_ref );
+
+    # Get the Rényi entropy of items in an array...
+    my $renyi_entropy = _renyi_entropy(
+        'array_ref' => $array_ref,
+        'exponent'  => 0.7,
+    );
 
 
 =head1 DESCRIPTION
 
-This module provides utility subroutines intended to facilitate the
-development of classes derived from L<Lingua::Diversity>. These subroutines
-are marked as internal because they are meant to be used by developers
-creating classes derived from L<Lingua::Diversity> (as opposed to being used
-by clients of such classes).
+This module provides utility subroutines that are or could be used by various
+classes derived from L<Lingua::Diversity>. These subroutines are marked as
+internal (i.e. their name starts with an underscore) because
+they are meant to be used by developers creating classes derived from
+L<Lingua::Diversity> (as opposed to being used by clients of such classes).
+
+No subroutine is exported by default. All subroutines are exportable, and tag
+':all' results in the export of all subroutines.
 
 =head1 SUBROUTINES
 
 =over 4
 
-=item _validate_size()
+=item _sample_indices()
 
-Check that the subroutine is called with at least a parameter 'unit_array_ref'
-containing an array ref. Check that the size of the array is within specified
-bounds. If called from within method C<measure_per_category()>, further check
-that a second array ref is provided via parameter 'category_array_ref', and
-that it has the same size as the first.
-
-NB: This subroutine is meant to be used within implementations of methods
-C<measure()> and C<measure_per_category()>. Use of this subroutine in other
-contexts has not been tested and probably doesn't make any sense.
-
-The subroutine requires one named parameter and may take up to four of them.
-
-=over 4
-
-=item unit_array_ref (required)
-
-A reference to an array of text units (e.g. words).
-
-=item category_array_ref
-
-A reference to an array of categories (e.g. lemmas).
-
-=item min_num_items
-
-The minimum number of items that should be in the array(s).
-
-=item max_num_items
-
-The maximum number of items that should be in the array(s).
-
-=back
+Return a reference to an array of random array indices. The subroutine takes
+two arguments, namely the size of the array (i.e. 1 plus the maximum possible
+index) and the number of indices to be sampled. An exception is thrown if the
+latter exceeds the former.
 
 =item _get_average()
 
 Compute the (possibly weighted) average and variance of a list of numbers.
-Return the average, variance, and number of observations.
+Return the average, variance, and count (number of observations).
 
 The subroutine requires a reference to an array of numbers as argument.
 Passing an empty array throws an exception.
@@ -322,66 +408,86 @@ Passing an empty array throws an exception.
 Optionally, a reference to an array of counts may be passed as a second
 argument. An exception is thrown if this array's size does not match the first
 one. Counts may be real instead of integers, in which case the number of
-observations returned may not be an integer.
+observations returned may not be an integer. In all cases, reported results
+are weighted according to the counts.
 
-=item _prepend_unit_with_category()
+=item _count_types()
 
-Take a reference to an array of units and an array of categories, and return
-a reference to an array where each element is a unit prepended with its
-category. E.g. from units C<[ qw( can be can ) ]> and categories
-C<[ qw( VERB VERB NOUN ) ]> return C<[ qw( VERBcan VERBbe NOUNcan ) ]>.
+Count the number of distinct items in an array. Takes an array reference as
+argument.
 
-It is recommended to use such a recoded array of units instead of the original
-one when writing the C<measure_per_category()> method. This makes it possible
-to process separately homophonous units that correspond to distinct
-categories, such as 'can' as a verb or noun form in the above example.
+=item _count_frequency()
+
+Count the number of occurrences of each distinct item in an array. Takes an
+array reference as argument. The result is a reference to a hash where each
+key correspond to a distinct item and each value to the number of occurrences
+of this item in the array.
+
+=item _get_units_per_category()
+
+Take a reference to an array of units and an array of categories, and build a
+hash where each key is a category and the corresponding value is a reference
+to the list of units that are associated with this category.
 
 NB: It is assumed that two non-empty arrays of identical size are passed in
-argument, which can and should be checked previously with subroutine
-C<_validate_size()>.
+argument.
+
+=item _perplexity()
+
+Compute the perplexity of items in an array, i.e. the exponential of the
+Shannon entropy of items in base e (see below). Takes a reference to an
+array as argument.
+
+=item _shannon_entropy()
+
+Compute the Shannon entropy of items in an array. Takes a reference to an
+array as first argument, and optionally the requested log base for the
+computation (default is e, i.e. exp(1)).
+
+NB: It is assumed that a non-empty array is passed in argument.
+
+=item _renyi_entropy()
+
+Compute the Rényi entropy of items in an array. Takes one required and two
+optional named parameters:
+
+=over 4
+
+=item array_ref
+
+A reference to a non-empty array.
+
+=item exponent
+
+The numeric parameter involved in the computation of Rényi's entropy (a number
+between 0 and 1 inclusive). Note that 0 amounts to computing the log of the
+number of types, and 1 amounts to computing Shannon's entropy. Default is 0.5.
+
+=item base
+
+A positive number to be used as the log base in the computation. Default is
+I<e> (i.e. exp(1)).
+
+=back
 
 =back
 
 =head1 DIAGNOSTICS
 
-The following error message targets I<developers> of classes derived from
-L<Lingua::Diversity>:
-
 =over 4
 
-=item Missing parameter 'unit_array_ref' in call to subroutine
-C<_validate_size()>
+=item The second argument of subroutine sampled_indices() cannot be larger
+than the first
 
-This exception is raised when subroutine C<_validate_size()> is called without
-its only required argument, 'unit_array_ref' (a reference to an array).
+This exception is raised when the second argument of subroutine
+C<sampled_indices()> is larger than the first, i.e. when the requested sample
+size exceeds the array size.
 
-=back
+=item Parameter 'exponent' of subroutine _renyi_entropy() must be between 0
+and 1 inclusive
 
-The following error messages target I<clients> of classes derived from
-L<Lingua::Diversity>. They should be copied almost verbatim in the
-documentation of these classes when the corresponding subroutines are used.
-
-=over 4
-
-=item Method [C<measure()>/C<measure_per_category()>] must be called with a
-reference to an array as 1st argument
-
-This exception is raised when either method C<measure()> or method
-C<measure_per_category()> is called without a reference to an array as a
-first argument.
-
-=item Method measure_per_category() must be called with a reference to an
-array as 2nd argument
-
-This exception is raised when method C<measure_per_category()> is called
-without a reference to an array as a second argument.
-
-=item Method [C<measure()>/C<measure_per_category()>] was called with an array
-containing N item(s) while this measure requires [at least/at most] M item(s)
-
-This exception is raised when either method C<measure()> or method
-C<measure_per_category()> is called with an argument array that is either too
-small or too large relative to conditions set by the selected measure.
+This exception is raised when the parameter I<exponent> of subroutine
+C<_renyi_entropy()> is set to a value lesser than 0 or greater than 1.
 
 =back
 
