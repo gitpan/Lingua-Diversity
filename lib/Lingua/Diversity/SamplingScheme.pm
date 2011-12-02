@@ -1,18 +1,10 @@
 package Lingua::Diversity::SamplingScheme;
 
 use Moose;
-use Moose::Util::TypeConstraints;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
-
-#=============================================================================
-# Subtype definitions.
-#=============================================================================
-
-enum 'SamplingMode', [ qw( random segmental ) ];
-
-no Moose::Util::TypeConstraints;
+use Lingua::Diversity::Subtype;
 
 
 #=============================================================================
@@ -21,7 +13,7 @@ no Moose::Util::TypeConstraints;
 
 has 'mode' => (
     is          => 'rw',
-    isa         => 'SamplingMode',
+    isa         => 'Lingua::Diversity::Subtype::SamplingMode',
     reader      => 'get_mode',
     writer      => 'set_mode',
     default     => 'random',
@@ -63,7 +55,7 @@ scheme
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity::SamplingScheme version 0.01.
+This documentation refers to Lingua::Diversity::SamplingScheme version 0.02.
 
 =head1 SYNOPSIS
 

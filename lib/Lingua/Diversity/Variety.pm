@@ -1,9 +1,8 @@
 package Lingua::Diversity::Variety;
 
 use Moose;
-use Moose::Util::TypeConstraints;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 extends 'Lingua::Diversity';
 
@@ -11,30 +10,6 @@ use Lingua::Diversity::Result;
 use Lingua::Diversity::SamplingScheme;
 use Lingua::Diversity::Internals qw( :all );
 
-
-#=============================================================================
-# Subtype definitions.
-#=============================================================================
-
-enum 'VarietyTransform', [ qw(
-    none
-    type_token_ratio
-    mean_frequency
-    guiraud
-    herdan
-    rubet
-    maas
-    dugast
-    lukjanenkov_nesitoj
-) ];
-
-enum 'SamplingOrder', [ qw( transform_then_average average_then_transform) ];
-
-subtype 'BetweenZeroAndOneIncl',
-    as 'Num',
-    where { $_ >= 0 && $_ <= 1 };
-
-no Moose::Util::TypeConstraints;
 
 
 #=============================================================================
@@ -70,7 +45,7 @@ our %builtin_transform = (
 
 has 'transform' => (
     is          => 'rw',
-    isa         => 'VarietyTransform | CodeRef',
+    isa         => 'Lingua::Diversity::Subtype::VarietyTransform | CodeRef',
     reader      => 'get_transform',
     writer      => 'set_transform',
     default     => 'none',
@@ -78,7 +53,7 @@ has 'transform' => (
 
 has 'unit_weighting' => (
     is          => 'rw',
-    isa         => 'BetweenZeroAndOneIncl',
+    isa         => 'Lingua::Diversity::Subtype::BetweenZeroAndOneIncl',
     reader      => 'get_unit_weighting',
     writer      => 'set_unit_weighting',
     default     => 0,
@@ -103,7 +78,7 @@ has 'sampling_scheme' => (
 
 has 'sampling_order' => (
     is          => 'rw',
-    isa         => 'SamplingOrder',
+    isa         => 'Lingua::Diversity::Subtype::SamplingOrder',
     reader      => 'get_sampling_order',
     writer      => 'set_sampling_order',
     default     => 'average_then_transform',
@@ -434,7 +409,7 @@ Lingua::Diversity::Variety - measuring the variety of text units
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity::Variety version 0.01.
+This documentation refers to Lingua::Diversity::Variety version 0.02.
 
 =head1 SYNOPSIS
 

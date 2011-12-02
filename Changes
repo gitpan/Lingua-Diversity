@@ -57,3 +57,15 @@ Revision history for Lingua-Diversity
         - Added shortcut in _get_average() for the case where there's only
         1 value.
 
+0.05    Fri Dec 2 11:30:00 2011
+        * Fixed error in test plan of t/04-Lingua-Diversity-Utils.
+        * L::D::Subtype:
+        - Created this module.
+        - Moved all Moose subtype definitions there.
+        - Qualified subtypes with L::D namespace (this seems to have been
+        a problem in v0.04.
+        - Modified accordingly all modules that used to contain their
+        own subtype definitions.
+        - Made a silent prayer for this version to finally pass the tests on
+        CPAN just like it does on the author's machine.
+        

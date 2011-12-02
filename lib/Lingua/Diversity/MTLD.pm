@@ -1,9 +1,8 @@
 package Lingua::Diversity::MTLD;
 
 use Moose;
-use Moose::Util::TypeConstraints;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 extends 'Lingua::Diversity';
 
@@ -12,25 +11,12 @@ use Lingua::Diversity::Internals qw( _get_average );
 
 
 #=============================================================================
-# Subtypes definitions.
-#=============================================================================
-
-enum 'WeightingMode', [ qw( within_only within_and_between ) ];
-
-subtype 'BetweenZeroAndOneExcl',
-    as 'Num',
-    where { $_ > 0 && $_ < 1 };
-
-no Moose::Util::TypeConstraints;
-
-
-#=============================================================================
 # Attributes.
 #=============================================================================
 
 has 'threshold' => (
     is          => 'rw',
-    isa         => 'BetweenZeroAndOneExcl',
+    isa         => 'Lingua::Diversity::Subtype::BetweenZeroAndOneExcl',
     reader      => 'get_threshold',
     writer      => 'set_threshold',
     default     => 0.72,
@@ -38,7 +24,7 @@ has 'threshold' => (
 
 has 'weighting_mode' => (
     is          => 'rw',
-    isa         => 'WeightingMode',
+    isa         => 'Lingua::Diversity::Subtype::WeightingMode',
     reader      => 'get_weighting_mode',
     writer      => 'set_weighting_mode',
     default     => 'within_only',
@@ -210,7 +196,7 @@ Lingua::Diversity::MTLD - 'MTLD' method for measuring diversity of text units
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity::MTLD version 0.03.
+This documentation refers to Lingua::Diversity::MTLD version 0.04.
 
 =head1 SYNOPSIS
 

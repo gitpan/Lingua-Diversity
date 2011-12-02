@@ -1,9 +1,8 @@
 package Lingua::Diversity::VOCD;
 
 use Moose;
-use Moose::Util::TypeConstraints;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 extends 'Lingua::Diversity';
 
@@ -12,23 +11,12 @@ use Lingua::Diversity::Internals qw( _get_average );
 
 
 #=============================================================================
-# Subtypes definitions.
-#=============================================================================
-
-subtype 'PosNum',
-    as 'Num',
-    where { $_ > 0 };
-
-no Moose::Util::TypeConstraints;
-
-
-#=============================================================================
 # Attributes.
 #=============================================================================
 
 has 'length_range' => (
     is          => 'rw',
-    isa         => 'ArrayRef[Natural]',
+    isa         => 'ArrayRef[Lingua::Diversity::Subtype::Natural]',
     reader      => 'get_length_range',
     writer      => 'set_length_range',
     trigger     => \&_length_range_set,
@@ -37,7 +25,7 @@ has 'length_range' => (
 
 has 'num_subsamples' => (
     is          => 'rw',
-    isa         => 'Natural',
+    isa         => 'Lingua::Diversity::Subtype::Natural',
     reader      => 'get_num_subsamples',
     writer      => 'set_num_subsamples',
     default     => 100,
@@ -45,7 +33,7 @@ has 'num_subsamples' => (
 
 has 'min_value' => (
     is          => 'rw',
-    isa         => 'PosNum',
+    isa         => 'Lingua::Diversity::Subtype::PosNum',
     reader      => 'get_min_value',
     writer      => 'set_min_value',
     default     => '1',
@@ -53,7 +41,7 @@ has 'min_value' => (
 
 has 'max_value' => (
     is          => 'rw',
-    isa         => 'PosNum',
+    isa         => 'Lingua::Diversity::Subtype::PosNum',
     reader      => 'get_max_value',
     writer      => 'set_max_value',
     default     => '200',
@@ -61,7 +49,7 @@ has 'max_value' => (
 
 has 'precision' => (
     is          => 'rw',
-    isa         => 'PosNum',
+    isa         => 'Lingua::Diversity::Subtype::PosNum',
     reader      => 'get_precision',
     writer      => 'set_precision',
     default     => '0.01',
@@ -69,7 +57,7 @@ has 'precision' => (
 
 has 'num_trials' => (
     is          => 'rw',
-    isa         => 'PosNum',
+    isa         => 'Lingua::Diversity::Subtype::PosNum',
     reader      => 'get_num_trials',
     writer      => 'set_num_trials',
     default     => '3',
@@ -257,7 +245,7 @@ Lingua::Diversity::VOCD - 'VOCD' method for measuring diversity of text units
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity::VOCD version 0.01.
+This documentation refers to Lingua::Diversity::VOCD version 0.02.
 
 =head1 SYNOPSIS
 

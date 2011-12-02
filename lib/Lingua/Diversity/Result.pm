@@ -1,9 +1,8 @@
 package Lingua::Diversity::Result;
 
 use Moose;
-use Moose::Util::TypeConstraints;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 
 
@@ -52,7 +51,7 @@ Lingua::Diversity::Result - storing the result of a diversity measurement
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity::Result version 0.02.
+This documentation refers to Lingua::Diversity::Result version 0.04.
 
 =head1 SYNOPSIS
 

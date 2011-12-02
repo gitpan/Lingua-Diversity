@@ -1,24 +1,16 @@
 package Lingua::Diversity;
 
 use Moose;
-use Moose::Util::TypeConstraints;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 use Lingua::Diversity::Result;
 use Lingua::Diversity::Variety;
 use Lingua::Diversity::MTLD;
 use Lingua::Diversity::VOCD;
 use Lingua::Diversity::X;
+use Lingua::Diversity::Subtype;
 
-
-#=============================================================================
-# Subtypes definitions.
-#=============================================================================
-
-subtype 'Natural',
-    as 'Int',
-    where { $_ > 0 };
 
 
 #=============================================================================
@@ -27,7 +19,7 @@ subtype 'Natural',
 
 has 'min_num_items' => (
     is          => 'rw',
-    isa         => 'Natural',
+    isa         => 'Lingua::Diversity::Subtype::Natural',
     reader      => '_get_min_num_items',
     writer      => '_set_min_num_items',
     default     => 1,
@@ -36,7 +28,7 @@ has 'min_num_items' => (
 
 has 'max_num_items' => (
     is          => 'rw',
-    isa         => 'Natural',
+    isa         => 'Lingua::Diversity::Subtype::Natural',
     reader      => '_get_max_num_items',
     writer      => '_set_max_num_items',
     init_arg    => undef,
@@ -266,7 +258,7 @@ Lingua::Diversity - measuring the diversity of text units
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity version 0.04.
+This documentation refers to Lingua::Diversity version 0.05.
 
 =head1 SYNOPSIS
 

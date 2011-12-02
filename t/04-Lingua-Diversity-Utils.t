@@ -140,7 +140,7 @@ is(
 SKIP: {
     eval { require Lingua::TreeTagger };
 
-    skip "Lingua::TreeTagger not installed", 2 if $@;
+    skip "Lingua::TreeTagger not installed", 10 if $@;
 
     # Get a tagged text
     my $tagger = Lingua::TreeTagger->new(
