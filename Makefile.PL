@@ -11,6 +11,7 @@ WriteMakefile
   'PREREQ_PM' => {
                    'Test::More' => 0,
                    'Exception::Class' => 0,
+                   'Test::Pod::Coverage' => 0,
                    'Moose' => 0
                  }
 )

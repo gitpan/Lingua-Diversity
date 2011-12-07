@@ -14,8 +14,7 @@ our @EXPORT_OK   = qw(
     split_tagged_text
 );
 
-our $VERSION     = 0.04;
-
+our $VERSION     = 0.05;
 
 use Lingua::Diversity::X;
 
@@ -123,10 +122,6 @@ sub split_tagged_text {
         # Default is 'and'.
         else { $parameter{'condition'}{'logical'} = 'and'; }
 
-        # Set default 'match all' regexp for 'original', 'lemma', and 'tag'...
-        $parameter{'condition'}{'original'} ||= qr{^.*$};
-        $parameter{'condition'}{'lemma'}    ||= qr{^.*$};
-        $parameter{'condition'}{'tag'}      ||= qr{^.*$};
     }
 
     my @units;
@@ -321,7 +316,7 @@ derived from L<Lingua::Diversity>
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity::Utils version 0.03.
+This documentation refers to Lingua::Diversity::Utils version 0.05.
 
 =head1 SYNOPSIS
 

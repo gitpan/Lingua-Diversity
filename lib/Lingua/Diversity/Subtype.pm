@@ -6,7 +6,7 @@ use strict;
 use warnings;
 use Carp;
 
-our $VERSION = 0.01;
+our $VERSION = 0.02;
 
 
 #=============================================================================
@@ -25,11 +25,6 @@ enum 'Lingua::Diversity::Subtype::VarietyTransform', [ qw(
     maas
     dugast
     lukjanenkov_nesitoj
-) ];
-
-enum 'Lingua::Diversity::Subtype::SamplingOrder', [ qw(
-    transform_then_average
-    average_then_transform
 ) ];
 
 enum 'Lingua::Diversity::Subtype::WeightingMode', [ qw(
@@ -76,7 +71,7 @@ Lingua::Diversity::Subtype - subtype definitions for Lingua::Diversity
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity:Subtype version 0.01.
+This documentation refers to Lingua::Diversity:Subtype version 0.02.
 
 =head1 DESCRIPTION
 

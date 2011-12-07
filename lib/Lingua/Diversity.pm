@@ -2,7 +2,11 @@ package Lingua::Diversity;
 
 use Moose;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
+
+# TODO
+# Add option for prepending units with lemmas in measure().
+# Document the use of _prepend_units... in measure_per_category().
 
 use Lingua::Diversity::Result;
 use Lingua::Diversity::Variety;
@@ -258,7 +262,7 @@ Lingua::Diversity - measuring the diversity of text units
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity version 0.05.
+This documentation refers to Lingua::Diversity version 0.06.
 
 =head1 SYNOPSIS
 

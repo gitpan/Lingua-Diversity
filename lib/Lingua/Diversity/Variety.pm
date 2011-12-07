@@ -2,7 +2,7 @@ package Lingua::Diversity::Variety;
 
 use Moose;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 extends 'Lingua::Diversity';
 
@@ -74,14 +74,6 @@ has 'sampling_scheme' => (
     writer      => 'set_sampling_scheme',
     predicate   => 'has_sampling_scheme',
     clearer     => 'clear_sampling_scheme',
-);
-
-has 'sampling_order' => (
-    is          => 'rw',
-    isa         => 'Lingua::Diversity::Subtype::SamplingOrder',
-    reader      => 'get_sampling_order',
-    writer      => 'set_sampling_order',
-    default     => 'average_then_transform',
 );
 
 
@@ -256,8 +248,8 @@ sub _compute_variety_average {
         }
     }
 
-    # Transform before averaging if requested...
-    if ( $self->get_sampling_order() eq 'transform_then_average' ) {
+    # Transform if requested...
+    if ( $self->get_transform() ne 'none' ) {
         @varieties = map {
             $transform->( $_, $scheme->get_subsample_size() )
         } @varieties;
@@ -265,11 +257,6 @@ sub _compute_variety_average {
 
     # Get average and variance of variety.
     my ( $average, $variance, $count ) = _get_average( \@varieties );
-
-    # Transform after averaging if requested...
-    if ( $self->get_sampling_order() eq 'average_then_transform' ) {
-        $average = $transform->($average, $scheme->get_subsample_size());
-    }
 
     # Create, fill, and return a new Result object...
     return Lingua::Diversity::Result->new(
@@ -409,7 +396,7 @@ Lingua::Diversity::Variety - measuring the variety of text units
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity::Variety version 0.02.
+This documentation refers to Lingua::Diversity::Variety version 0.03.
 
 =head1 SYNOPSIS
 
@@ -586,29 +573,12 @@ Quantifying the development of inflectional diversity, I<First Language,
 30(2)>: 175-198. (L<read preprint version
 online|http://www.cnts.ua.ac.be/~gillis/pdf/FL_Xanthos_Gillis_in_press.pdf>)
 
-=item sampling_order
-
-Either I<average_then_transform> (default) or I<transform_then_average>.
-
-NB: This parameter has no effect if the value of the I<sampling_scheme>
-parameter is undef, or if the value of the I<transform> parameter is I<none>.
-In fact, it makes no difference for the predefined transforms (but it could
-make a difference for a user-defined transform).
-
-Value I<average_then_transform> means that resampling and averaging will be
-applied prior to any tranform specified by the I<transform> parameter
-(see above). In other words, the reported variety is the transformed
-average diversity per subsample. Note that the reported variance is NOT
-transformed (i.e. it corresponds to the diversity BEFORE transform).
-
-Value I<transform_then_average> means that resampling and averaging will be
-applied after any tranform specified by the I<transform> parameter,
-so that the reported variety is the average transformed diversity per
-subsample. The reported variance is the variance of the transformed diversity.
-
-In both cases, the number of tokens used in the transform will be set to the
-value of the I<subsample_size> attribute of the sampling scheme (see
-L<Lingua::Diversity::SamplingScheme>).
+Note that resampling and averaging (if any) are applied after any tranform
+specified by the I<transform> parameter, so that the reported variety is the
+average transformed diversity per subsample and the reported variance is the
+variance of the transformed diversity. The number of tokens used in the
+transform is set to the value of the I<subsample_size> attribute of the
+sampling scheme (see L<Lingua::Diversity::SamplingScheme>).
 
 =back
 
@@ -632,10 +602,6 @@ Getter and setter for the I<transform> attribute.
 and clear_sampling_scheme()
 
 Getter, setter, predicate, and clearer for the I<sampling_scheme> attribute.
-
-=item get_sampling_order() and sampling_order()
-
-Getter and setter for the I<sampling_order> attribute.
 
 =back
 

@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 31;
+use Test::More tests => 27;
 
 # Module is usable...
 BEGIN {
@@ -238,7 +238,7 @@ is(
     'Method _measure() correctly croaks at arrays smaller than subsample_size'
 );
 
-# Method _compute_variety_average() works fine (random, av_then_tr)...
+# Method _compute_variety_average() works fine (random)...
 $sampling_scheme = Lingua::Diversity::SamplingScheme->new(
     'mode'           => 'random',
     'num_subsamples' => 100000,
@@ -247,37 +247,15 @@ $sampling_scheme = Lingua::Diversity::SamplingScheme->new(
 $diversity = Lingua::Diversity::Variety->new(
     'sampling_scheme'   => $sampling_scheme,
     'transform'         => sub { $_[0] * $_[0] },
-    'sampling_order'    => 'average_then_transform',
 );
-$result = $diversity->_compute_variety_average( $unit_array_ref );
-is(
-    sprintf( "%.1f", $result->get_diversity() ),
-    2.8,
-    q{Method _compute_variety_average() works fine (random, av_then_tr)}
-);
-
-# Method _compute_variety_average() works fine (random, av_then_tr, per cat).
-$result = $diversity->_compute_variety_average(
-    $recoded_unit_array_ref,
-    $category_array_ref,
-);
-is(
-    sprintf( "%.1f", $result->get_diversity() ),
-    1.8,
-    q{Method _compute_variety_average() works fine (random, av_then_tr, }
-  . q{per cat)}
-);
-
-# Method _compute_variety_average() works fine (random, tr_then_av)...
-$diversity->set_sampling_order( 'transform_then_average' );
 $result = $diversity->_compute_variety_average( $unit_array_ref );
 is(
     sprintf( "%.0f", $result->get_diversity() ),
     3,
-    q{Method _compute_variety_average() works fine (random, tr_then_av)}
+    q{Method _compute_variety_average() works fine (random)}
 );
 
-# Method _compute_variety_average() works fine (random, tr_then_av, per cat.).
+# Method _compute_variety_average() works fine (random, per cat.).
 $result = $diversity->_compute_variety_average(
     $recoded_unit_array_ref,
     $category_array_ref,
@@ -285,24 +263,23 @@ $result = $diversity->_compute_variety_average(
 is(
     sprintf( "%.0f", $result->get_diversity() ),
     2,
-    q{Method _compute_variety_average() works fine (random, tr_then_av, }
-  . q{per cat)}
+    q{Method _compute_variety_average() works fine (random, per category)}
 );
 
 $unit_array_ref          = [ qw( a  b  b  b  c ) ];
 $category_array_ref      = [ qw( A  A  A  B  C  ) ];
 $recoded_unit_array_ref  = [ qw( Aa Ab Ab Bb Cc ) ];
 
-# Method _compute_variety_average() works fine (segm., tr_then_av)...
+# Method _compute_variety_average() works fine (segmental)...
 $sampling_scheme->set_mode( 'segmental' );
 $result = $diversity->_compute_variety_average( $unit_array_ref );
 is(
     sprintf( "%.1f", $result->get_diversity() ),
     2.5,
-    q{Method _compute_variety_average() works fine (segm., tr_then_av)}
+    q{Method _compute_variety_average() works fine (segmental)}
 );
 
-# Method _compute_variety_average() works fine (segm., tr_then_av, per cat)...
+# Method _compute_variety_average() works fine (segm., per cat)...
 $result = $diversity->_compute_variety_average(
     $recoded_unit_array_ref,
     $category_array_ref,
@@ -310,29 +287,7 @@ $result = $diversity->_compute_variety_average(
 is(
     sprintf( "%.1f", $result->get_diversity() ),
     2.5,
-    q{Method _compute_variety_average() works fine (segm., tr_then_av, }
-  . q{per cat)}
-);
-
-# Method _compute_variety_average() works fine (segm., av_then_tr)...
-$diversity->set_sampling_order( 'average_then_transform' );
-$result = $diversity->_compute_variety_average( $unit_array_ref );
-is(
-    sprintf( "%.2f", $result->get_diversity() ),
-    2.25,
-    q{Method _compute_variety_average() works fine (segm., av_then_tr)}
-);
-
-# Method _compute_variety_average() works fine (segm., av_then_tr, per cat)...
-$result = $diversity->_compute_variety_average(
-    $recoded_unit_array_ref,
-    $category_array_ref,
-);
-is(
-    sprintf( "%.2f", $result->get_diversity() ),
-    2.25,
-    q{Method _compute_variety_average() works fine (segm., av_then_tr, }
-  . q{per cat)}
+    q{Method _compute_variety_average() works fine (segmental, per category)}
 );
 
 

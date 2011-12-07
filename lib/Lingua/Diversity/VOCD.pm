@@ -2,7 +2,7 @@ package Lingua::Diversity::VOCD;
 
 use Moose;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 extends 'Lingua::Diversity';
 
@@ -36,7 +36,7 @@ has 'min_value' => (
     isa         => 'Lingua::Diversity::Subtype::PosNum',
     reader      => 'get_min_value',
     writer      => 'set_min_value',
-    default     => '1',
+    default     => '0.01',
 );
 
 has 'max_value' => (
@@ -245,7 +245,7 @@ Lingua::Diversity::VOCD - 'VOCD' method for measuring diversity of text units
 
 =head1 VERSION
 
-This documentation refers to Lingua::Diversity::VOCD version 0.02.
+This documentation refers to Lingua::Diversity::VOCD version 0.03
 
 =head1 SYNOPSIS
 
@@ -352,7 +352,7 @@ Default is 100.
 =item min_value
 
 The minimal parameter value that can be tried during curve-fitting (a positive
-number). Default is 1.
+number). Default is 0.01.
 
 =item max_value
 

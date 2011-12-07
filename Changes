@@ -1,18 +1,33 @@
 Revision history for Lingua-Diversity
 
-0.01    Sat Nov 12 12:00:00 2011
-        First version, released on an unsuspecting world.
+0.06    Wed Dec 7 22:00:00 2011
+        * Added Test::Pod::Coverage to build_requires in Build.pl.
+        * L::D::Utils:
+        - Fixed version number.
+        - Fixed bug in _split_tagged_text() (case where none of 'original',
+          'lemma', and 'tag' was defined in condition).
+        * L::D::VOCD:
+        - Set default value of 'min_value' to 0.01 (to work 'per category').
+        * L::D::Variety:
+        - Removed the sampling_order attribute, which did not appear to be as
+          useful as it was confusing. Things now follow the logical
+          'transform_then_average' pattern. Doc and tests changed accordingly.
+        * L::D::Subtype:
+        - Removed the SamplingOrder subtype (no longer used by L::D::Variety).
 
-0.02    Sat Nov 12 21:30:00 2011
-        Fixed a few typos, errors and glitches in the embedded documentation.
 
-0.03    Sun Nov 13 23:00:00 2011
-        Fixed a few more errors in the embedded documentation.
-        Added the possibility to selectively in-/exclude tokens in subroutine
-        Lingua::Diversity::Utils::split_tagged_text().
-        Relaxed constraints on attributes 'diversity', 'variance', and 'count'
-        of Lingua::Diversity::Result objects; they're just plain Nums now.
-        
+0.05    Fri Dec 2 11:30:00 2011
+        * Fixed error in test plan of t/04-Lingua-Diversity-Utils.
+        * L::D::Subtype:
+        - Created this module.
+        - Moved all Moose subtype definitions there.
+        - Qualified subtypes with L::D namespace (this seems to have been
+        a problem in v0.04.
+        - Modified accordingly all modules that used to contain their
+        own subtype definitions.
+        - Made a silent prayer for this version to finally pass the tests on
+        CPAN just like it does on the author's machine.
+
 0.04    Mon Nov 28 23:05:00 2011
         * Modified extensive parts of the embedded documentation.
         * Added classes L::D::Variety, L::D::SamplingScheme, and L::D::VOCD,
@@ -57,15 +72,16 @@ Revision history for Lingua-Diversity
         - Added shortcut in _get_average() for the case where there's only
         1 value.
 
-0.05    Fri Dec 2 11:30:00 2011
-        * Fixed error in test plan of t/04-Lingua-Diversity-Utils.
-        * L::D::Subtype:
-        - Created this module.
-        - Moved all Moose subtype definitions there.
-        - Qualified subtypes with L::D namespace (this seems to have been
-        a problem in v0.04.
-        - Modified accordingly all modules that used to contain their
-        own subtype definitions.
-        - Made a silent prayer for this version to finally pass the tests on
-        CPAN just like it does on the author's machine.
+0.03    Sun Nov 13 23:00:00 2011
+        Fixed a few more errors in the embedded documentation.
+        Added the possibility to selectively in-/exclude tokens in subroutine
+        Lingua::Diversity::Utils::split_tagged_text().
+        Relaxed constraints on attributes 'diversity', 'variance', and 'count'
+        of Lingua::Diversity::Result objects; they're just plain Nums now.
+
+0.02    Sat Nov 12 21:30:00 2011
+        Fixed a few typos, errors and glitches in the embedded documentation.
+
+0.01    Sat Nov 12 12:00:00 2011
+        First version, released on an unsuspecting world.
         
