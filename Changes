@@ -1,5 +1,13 @@
 Revision history for Lingua-Diversity
 
+0.07    Mon Nov 3 12:15:00 2014
+        * In L::D::Internals, removed acute accent in comments about Renyi's
+          entropy.
+        * In t/03-Lingua-Diversity-Internals, fixed an error in the function
+          for comparing hashes, which led to spurious failure in Strawberry
+          Perl.
+
+
 0.06    Wed Dec 7 22:00:00 2011
         * Added Test::Pod::Coverage to build_requires in Build.pl.
         * L::D::Utils:

@@ -8,7 +8,7 @@ use Carp;
 
 use Exporter   ();
 
-our $VERSION     = 0.03;
+our $VERSION     = 0.04;
 
 our @ISA         = qw( Exporter );
 our %EXPORT_TAGS = (
@@ -248,12 +248,12 @@ sub _perplexity {
 #-----------------------------------------------------------------------------
 # Subroutine _renyi_entropy
 #-----------------------------------------------------------------------------
-# Synopsis:         Compute Rényi's entropy.
+# Synopsis:         Compute Renyi's entropy.
 # Arguments:        - 'array_ref' => a reference to an array.
 #                   - 'exponent'  => a number between 0 and 1 inclusive
 #                                    (default is 0.5).
 #                   - 'base'      => the log base (default is exp(1)).
-# Valeur de retour: - The Rényi's entropy in the requested base.
+# Valeur de retour: - The Renyi's entropy in the requested base.
 #-----------------------------------------------------------------------------
 
 sub _renyi_entropy {
@@ -368,7 +368,7 @@ This documentation refers to Lingua::Diversity::Internals version 0.03.
     # Get the shannon entropy of items in an array...
     my $shannon_entropy = _shannon_entropy( $array_ref );
 
-    # Get the Rényi entropy of items in an array...
+    # Get the Renyi entropy of items in an array...
     my $renyi_entropy = _renyi_entropy(
         'array_ref' => $array_ref,
         'exponent'  => 0.7,
@@ -448,7 +448,7 @@ NB: It is assumed that a non-empty array is passed in argument.
 
 =item _renyi_entropy()
 
-Compute the Rényi entropy of items in an array. Takes one required and two
+Compute the Renyi entropy of items in an array. Takes one required and two
 optional named parameters:
 
 =over 4
@@ -459,7 +459,7 @@ A reference to a non-empty array.
 
 =item exponent
 
-The numeric parameter involved in the computation of Rényi's entropy (a number
+The numeric parameter involved in the computation of Renyi's entropy (a number
 between 0 and 1 inclusive). Note that 0 amounts to computing the log of the
 number of types, and 1 amounts to computing Shannon's entropy. Default is 0.5.
 

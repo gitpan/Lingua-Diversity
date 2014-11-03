@@ -216,8 +216,8 @@ sub _compare_arrays {
 
 sub _compare_hashes {
     my ( $first_hash_ref, $second_hash_ref ) = @_;
-    my @first_hash_keys  = keys %$first_hash_ref;
-    my @second_hash_keys = keys %$second_hash_ref;
+    my @first_hash_keys  = sort keys %$first_hash_ref;
+    my @second_hash_keys = sort keys %$second_hash_ref;
     return 0 if ! _compare_arrays( \@first_hash_keys, \@second_hash_keys );
     foreach my $key ( @first_hash_keys ) {
         if (

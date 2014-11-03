@@ -2,7 +2,7 @@ package Lingua::Diversity;
 
 use Moose;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 # TODO
 # Add option for prepending units with lemmas in measure().
